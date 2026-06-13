@@ -1,14 +1,18 @@
 export default async function handler(request, response) {
-  if (request.method !== 'POST') {
-    response.setHeader('Allow', 'POST');
-    return response.status(405).json({ error: 'Only POST is allowed' });
-  }
-
   const origin = request.headers.origin || '*';
   response.setHeader('Access-Control-Allow-Origin', origin);
   response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   response.setHeader('Vary', 'Origin');
+
+  if (request.method === 'OPTIONS') {
+    return response.status(204).end();
+  }
+
+  if (request.method !== 'POST') {
+    response.setHeader('Allow', 'POST, OPTIONS');
+    return response.status(405).json({ error: 'Only POST is allowed' });
+  }
 
   const { question, context } = request.body || {};
   if (!question || typeof question !== 'string') {
