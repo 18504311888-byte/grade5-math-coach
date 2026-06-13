@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-label="五下数学">
+  <rect width="192" height="192" rx="32" fill="#2563eb"/>
+  <path d="M52 58h88v18H52zM62 88h68v16H62zM52 118h88v18H52z" fill="#fff" opacity=".92"/>
+  <circle cx="144" cy="48" r="18" fill="#16a34a"/>
+  <text x="96" y="104" text-anchor="middle" font-size="28" font-family="Arial, sans-serif" font-weight="800" fill="#fff">数学</text>
+</svg>

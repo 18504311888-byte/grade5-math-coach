@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 170">
+  <rect width="720" height="170" fill="#f8f4e8"/>
+  <g stroke="#24113f" stroke-width="3" stroke-linejoin="round">
+    <g transform="translate(20 20)"><path fill="#fdb927" d="M8 88c25-4 37-18 48-42l22 2 16 22 36 10c10 3 18 10 18 18H8z"/><path fill="#fff" d="M42 51l22 11M48 43l23 11M54 35l22 11"/><text x="10" y="130" font-size="13" fill="#24113f">Ja 2</text></g>
+    <g transform="translate(160 20)"><path fill="#552583" d="M8 88c25-4 37-18 48-42l22 2 16 22 36 10c10 3 18 10 18 18H8z"/><path fill="#fdb927" d="M36 56h48l18 13H48z"/><text x="10" y="130" font-size="13" fill="#24113f">AE 1</text></g>
+    <g transform="translate(300 20)"><path fill="#24113f" d="M8 88c25-4 37-18 48-42l22 2 16 22 36 10c10 3 18 10 18 18H8z"/><path fill="#fdb927" d="M33 53l40 18M41 45l38 18"/><text x="10" y="130" font-size="13" fill="#24113f">Luka 5</text></g>
+    <g transform="translate(440 20)"><path fill="#fff" d="M8 88c25-4 37-18 48-42l22 2 16 22 36 10c10 3 18 10 18 18H8z"/><path fill="#552583" d="M28 70h76l18 14H16z"/><text x="10" y="130" font-size="13" fill="#24113f">Tatum 4</text></g>
+    <g transform="translate(580 20)"><path fill="#fdb927" d="M8 88c25-4 37-18 48-42l22 2 16 22 36 10c10 3 18 10 18 18H8z"/><path fill="#552583" d="M32 51l40 18M41 42l39 18"/><text x="10" y="130" font-size="13" fill="#24113f">Kobe 6</text></g>
+  </g>
+</svg>

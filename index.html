@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f7f9fc" />
+    <title>五下数学学习器</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="stylesheet" href="styles.css?v=19" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="rail" aria-label="知识点">
+        <div class="brand">
+          <div class="brand-mark">数</div>
+          <div>
+            <h1>五下数学</h1>
+            <p>北师大版</p>
+          </div>
+        </div>
+
+        <div class="meter" aria-label="学习进度">
+          <div>
+            <span id="masteredCount">0</span>
+            <small>已掌握</small>
+          </div>
+          <div>
+            <span id="reviewCount">0</span>
+            <small>需巩固</small>
+          </div>
+          <div>
+            <span id="photoCount">0</span>
+            <small>照片</small>
+          </div>
+        </div>
+
+        <nav id="topicNav" class="topic-nav"></nav>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="unitLabel">用方程解决问题</p>
+            <h2 id="topicTitle">相遇问题</h2>
+          </div>
+          <div class="toolbar" role="group" aria-label="主要操作">
+            <button class="tool-button" id="startBtn" type="button">
+              <span aria-hidden="true">▶</span>
+              开始
+            </button>
+            <button class="tool-button secondary" id="resetBtn" type="button">
+              <span aria-hidden="true">↺</span>
+              重做
+            </button>
+          </div>
+        </header>
+
+        <div class="game-bar" id="gameBar">
+          <div class="game-streak">
+            <span class="streak-emoji" aria-label="连续学习徽章">🌱</span>
+            <span>连续</span>
+            <span class="streak-count">0</span>
+            <span>天</span>
+          </div>
+          <div class="game-stars">
+            <span aria-hidden="true">⭐</span>
+            <span class="star-count">0</span>
+          </div>
+          <span class="game-encourage-text">思考让大脑更聪明！</span>
+          <div class="daily-tasks" id="dailyTasks"></div>
+        </div>
+
+        <section class="workspace">
+          <section class="lesson-panel" aria-label="练习区">
+            <div class="focus-strip">
+              <div>
+                <span class="status-pill" id="topicStatus">未开始</span>
+                <strong id="lessonGoal">找等量关系，列方程解决相遇问题</strong>
+              </div>
+              <div class="mini-diagram" aria-label="相遇问题示意">
+                <span>A</span>
+                <i></i>
+                <b>相向而行</b>
+                <i></i>
+                <span>B</span>
+              </div>
+            </div>
+
+            <div class="rule-line">
+              <span>核心关系</span>
+              <strong id="coreRule">甲走的路程 + 乙走的路程 = 总路程</strong>
+            </div>
+
+            <div id="problemList" class="problem-list"></div>
+          </section>
+
+          <aside class="coach-panel" aria-label="诊断区">
+            <div class="upload-panel">
+              <div class="panel-title">
+                <h3>作答照片</h3>
+                <span id="uploadState">未上传</span>
+              </div>
+              <label class="upload-drop" for="photoInput">
+                <span aria-hidden="true">拍</span>
+                <strong>拍照或选择图片</strong>
+              </label>
+              <input id="photoInput" class="file-input" type="file" accept="image/*" capture="environment" multiple />
+              <div class="photo-review-actions">
+                <button id="reviewPhotoBtn" class="tool-button secondary" type="button">查看照片答题</button>
+              </div>
+              <div id="photoGrid" class="photo-grid"></div>
+            </div>
+
+            <div class="diagnosis-panel">
+              <div class="panel-title">
+                <h3>诊断</h3>
+                <span id="scoreBadge">待提交</span>
+              </div>
+              <div id="diagnosisBody" class="empty-state">完成题目后提交。</div>
+            </div>
+
+            <div class="variant-panel">
+              <div class="panel-title">
+                <h3>追练题</h3>
+                <span id="variantBadge">0</span>
+              </div>
+              <div id="variantList" class="variant-list"></div>
+            </div>
+
+            <div class="history-panel">
+              <div class="panel-title">
+                <h3>学习记录</h3>
+                <button id="clearHistoryBtn" class="text-button" type="button">清空</button>
+              </div>
+              <div id="historyList" class="history-list"></div>
+            </div>
+
+            <div class="reward-panel">
+              <div class="panel-title">
+                <h3>球鞋奖励墙</h3>
+                <span id="shoePoints">0分</span>
+              </div>
+              <div id="rewardProgress" class="reward-progress"></div>
+              <div id="rewardWall" class="reward-wall"></div>
+            </div>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <template id="problemTemplate">
+      <article class="problem-card">
+        <div class="problem-head">
+          <span class="problem-index"></span>
+          <span class="problem-type"></span>
+        </div>
+        <p class="problem-text"></p>
+        <div class="answer-area"></div>
+        <div class="problem-feedback"></div>
+      </article>
+    </template>
+
+    <dialog id="photoReviewDialog" class="photo-review-dialog">
+      <div class="photo-review-header">
+        <h3>作答照片预览</h3>
+        <button id="closePhotoReviewBtn" class="text-button" type="button">关闭</button>
+      </div>
+      <p>请查看照片中的最终答案和计算过程，再把答案填写到题目输入框中提交。当前版本会辅助查看图片，不会自动读取手写文字。</p>
+      <img id="photoReviewImage" alt="作答照片" />
+    </dialog>
+
+    <script src="problem-bank.js?v=19" defer></script>
+    <script src="app.js?v=19" defer></script>
+  </body>
+</html>
