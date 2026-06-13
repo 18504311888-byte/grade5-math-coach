@@ -723,6 +723,37 @@ function clearHistory() {
   save();
 }
 
+async function askAiHint() {
+  const button = $("askAiBtn");
+  const question = $("aiQuestion").value.trim();
+  if (!question) {
+    $("aiAnswer").textContent = "先写下你卡住的地方，例如：我不知道第一步怎么做。";
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "AI 思考中...";
+  $("aiAnswer").textContent = "正在生成提示...";
+
+  try {
+    const response = await fetch("https://grade5-math-coach-api.vercel.app/api/deepseek", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        question,
+        context: `当前知识点：${state.currentTopic}。核心关系：${topicMeta[state.currentTopic]?.rule || topicMeta.default.rule}`,
+      }),
+    });
+    const data = await response.json();
+    $("aiAnswer").textContent = data.answer || data.error || "暂时没有生成提示。";
+  } catch {
+    $("aiAnswer").textContent = "AI 服务暂时不可用，请稍后再试。";
+  } finally {
+    button.disabled = false;
+    button.textContent = "问 AI 提示";
+  }
+}
+
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 }
@@ -735,6 +766,7 @@ function init() {
   $("photoInput").addEventListener("change", handlePhotos);
   $("reviewPhotoBtn").addEventListener("click", reviewPhotoAnswers);
   $("closePhotoReviewBtn").addEventListener("click", () => $("photoReviewDialog").close());
+  $("askAiBtn").addEventListener("click", askAiHint);
   renderNav();
   renderLesson();
   renderHistory();

@@ -1263,3 +1263,9 @@ body {
 .thinking-label { display: grid; gap: 6px; color: var(--muted); font-size: 13px; }
 .thinking-label span { font-weight: 700; color: var(--ink); }
 .thinking-field { font-size: 13px; }
+
+.ai-panel { border: 1px solid var(--line); border-radius: 14px; background: var(--panel); overflow: hidden; }
+.ai-note { margin: 0; padding: 0 14px 10px; color: var(--muted); font-size: 12px; }
+.ai-question { width: calc(100% - 28px); margin: 0 14px 10px; min-height: 74px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; padding: 10px; color: var(--ink); background: #fbfcfe; }
+.ai-panel .tool-button { margin: 0 14px 12px; }
+.ai-answer { margin: 0 14px 14px; white-space: pre-wrap; line-height: 1.7; }
