@@ -432,8 +432,7 @@ function renderProblems() {
       const label = document.createElement("label");
       label.className = "answer-box";
       const saved = state.answers[`${index}-${answerIndex}`] || "";
-      const placeholder = answer.type === "text" ? (currentSubject === "english" ? "写一个完整句子…" : "写清楚你的理由…") : `例如：${formatAnswerExample(answer)}`;
-      label.innerHTML = `<span>${answerIndex + 1}. ${answer.type === "text" ? "我的回答" : `答案${answer.unit ? `（${answer.unit}）` : ""}`}</span><input class="input-field${activeLesson ? "" : " locked"}" data-problem="${index}" data-answer="${answerIndex}" value="${escapeHtml(saved)}" placeholder="${placeholder}" ${activeLesson ? "" : "disabled"} />`;
+      label.innerHTML = `<span>${answerIndex + 1}. ${answer.type === "text" ? "我的回答" : `答案${answer.unit ? `（${answer.unit}）` : ""}`}</span><input class="input-field${activeLesson ? "" : " locked"}" data-problem="${index}" data-answer="${answerIndex}" value="${escapeHtml(saved)}" ${activeLesson ? "" : "disabled"} />`;
       grid.appendChild(label);
     });
     area.appendChild(grid);
@@ -441,7 +440,7 @@ function renderProblems() {
       const thinking = document.createElement("label");
       thinking.className = "thinking-label";
       const savedThinking = state.answers[`think-${index}`] || "";
-      thinking.innerHTML = `<span>我这样想：谁走了多少？为什么要相加或相减？</span><textarea class="text-field thinking-field${activeLesson ? "" : " locked"}" data-thinking="${index}" placeholder="例如：两个人相向而行，所以要把两个人每分钟走的路程相加。" ${activeLesson ? "" : "disabled"}>${escapeHtml(savedThinking)}</textarea>`;
+      thinking.innerHTML = `<span>我这样想：谁走了多少？为什么要相加或相减？</span><textarea class="text-field thinking-field${activeLesson ? "" : " locked"}" data-thinking="${index}" ${activeLesson ? "" : "disabled"}>${escapeHtml(savedThinking)}</textarea>`;
       area.appendChild(thinking);
     }
     list.appendChild(node);
@@ -461,8 +460,6 @@ function renderProblems() {
   });
   list.querySelectorAll("input").forEach((input) => {
     input.addEventListener("input", rememberAnswer);
-    input.addEventListener("focus", hidePlaceholderWhileTyping);
-    input.addEventListener("blur", restorePlaceholderAfterTyping);
   });
   list.querySelectorAll("textarea[data-thinking]").forEach((input) => input.addEventListener("input", rememberThinking));
 }
@@ -477,17 +474,6 @@ function rememberAnswer(event) {
   const input = event.currentTarget;
   state.answers[`${input.dataset.problem}-${input.dataset.answer}`] = input.value;
   save();
-}
-
-function hidePlaceholderWhileTyping(event) {
-  const input = event.currentTarget;
-  if (!input.dataset.placeholderText) input.dataset.placeholderText = input.placeholder;
-  input.placeholder = "";
-}
-
-function restorePlaceholderAfterTyping(event) {
-  const input = event.currentTarget;
-  if (!input.value) input.placeholder = input.dataset.placeholderText || "";
 }
 
 function submitAnswers() {
@@ -722,17 +708,13 @@ function renderVariants() {
   $("variantList").innerHTML = state.variants.length
     ? state.variants.map((item, index) => {
         const saved = state.variantAnswers[index] || "";
-        return `<div class="variant-item"><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.text)}</p><input class="variant-answer" data-variant="${index}" value="${escapeHtml(saved)}" placeholder="写答案或说明理由" /><div class="variant-feedback" id="variantFeedback${index}"></div></div>`;
+        return `<div class="variant-item"><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.text)}</p><input class="variant-answer" data-variant="${index}" value="${escapeHtml(saved)}" /><div class="variant-feedback" id="variantFeedback${index}"></div></div>`;
       }).join("") + `<div class="variant-note">错题会继续生成下一轮追练，直到本轮全部答对。</div><div class="variant-actions"><button class="tool-button" type="button" id="submitVariantsBtn">提交追练</button></div>`
     : `<div class="empty-state">提交后会根据结果生成追练题。</div>`;
   $("variantList").querySelectorAll(".variant-answer").forEach((input) => input.addEventListener("input", (event) => {
     state.variantAnswers[event.currentTarget.dataset.variant] = event.currentTarget.value;
     save();
   }));
-  $("variantList").querySelectorAll(".variant-answer").forEach((input) => {
-    input.addEventListener("focus", hidePlaceholderWhileTyping);
-    input.addEventListener("blur", restorePlaceholderAfterTyping);
-  });
   const button = $("submitVariantsBtn");
   if (button) button.addEventListener("click", submitVariants);
 }
