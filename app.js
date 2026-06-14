@@ -1,5 +1,17 @@
+const SUBJECT_KEY = "grade5Subject.v1";
 const STORAGE_KEY = "grade5MathCoach.v2";
 const GAME_KEY = "grade5MathGame.v2";
+const ENG_STORAGE_KEY = "grade5EnglishCoach.v1";
+const ENG_GAME_KEY = "grade5EnglishGame.v1";
+
+// Current subject: 'math' or 'english'
+let currentSubject = (function() {
+  try { return JSON.parse(localStorage.getItem(SUBJECT_KEY)) || "math"; }
+  catch { return "math"; }
+})();
+
+function getStorageKey() { return currentSubject === "english" ? ENG_STORAGE_KEY : STORAGE_KEY; }
+function getGameKey() { return currentSubject === "english" ? ENG_GAME_KEY : GAME_KEY; }
 
 const shoeRewards = [
   { points: 20, name: "Nike Ja 2", subtitle: "后卫启动鞋", color: "#fdb927", accent: "#552583", image: "assets/shoes/ja2-real.png" },
@@ -9,15 +21,23 @@ const shoeRewards = [
   { points: 300, name: "Nike Kobe 6 Protro", subtitle: "传奇收藏鞋", color: "#552583", accent: "#ffffff", image: "assets/shoes/kobe6-real.jpg" },
 ];
 
+const badmintonRewards = [
+  { points: 20, name: "基础训练拍", subtitle: "适合初学的铝合金球拍", color: "#00a86b", accent: "#ffffff", image: "assets/rewards/badminton-basic.svg" },
+  { points: 50, name: "进阶碳素拍", subtitle: "轻量碳纤维，控球精准", color: "#0055a4", accent: "#ffffff", image: "assets/rewards/badminton-carbon.svg" },
+  { points: 100, name: "专业攻防拍", subtitle: "攻守兼备，比赛级装备", color: "#c41e3a", accent: "#ffffff", image: "assets/rewards/badminton-pro.svg" },
+  { points: 180, name: "限量签名拍", subtitle: "世界冠军同款签名球拍", color: "#ffd700", accent: "#000000", image: "assets/rewards/badminton-elite.svg" },
+  { points: 300, name: "🏆 冠军典藏套装", subtitle: "球拍+球包+羽毛球全套", color: "#8b00ff", accent: "#ffffff", image: "assets/rewards/badminton-champion.svg" },
+];
+
 const topics = [
-  { unit: "分数加减法", items: ["折纸：异分母分数加减法", "通分后进行分数加减", "星期日的安排：分数加减混合运算", "分数和小数互化", "分数、小数大小比较"] },
-  { unit: "长方体（一）", items: ["长方体的认识", "正方体的认识", "展开与折叠", "长方体和正方体表面积", "露在外面的面"] },
-  { unit: "分数乘法", items: ["分数乘整数", "求一个数的几分之几是多少", "分数乘分数", "分数乘法应用题", "倒数"] },
-  { unit: "长方体（二）", items: ["体积与容积", "体积单位和容积单位", "长方体体积", "正方体体积", "底面积乘高", "体积单位换算", "有趣的测量：不规则物体体积"] },
+  { unit: "分数加减法", items: ["折纸：异分母分数加减法", "星期日的安排", "分数王国与小数王国", "练习一"] },
+  { unit: "长方体（一）", items: ["长方体的认识", "展开与折叠", "长方体的表面积", "露在外面的面", "练习二"] },
+  { unit: "分数乘法", items: ["分数乘整数", "分数乘分数", "倒数", "分数乘法应用题", "练习三"] },
+  { unit: "长方体（二）", items: ["体积与容积", "体积单位", "长方体的体积", "体积单位的换算", "有趣的测量", "练习四"] },
   { unit: "分数除法", items: ["分数除以整数", "一个数除以分数", "分数除以分数", "已知一个数的几分之几是多少，求这个数", "分数除法应用题"] },
   { unit: "确定位置", items: ["用方向和距离确定位置", "根据描述找位置", "根据图描述位置", "路线描述"] },
   { unit: "用方程解决问题", items: ["邮票的张数", "列方程解决倍数关系", "相遇问题", "方程应用题综合"] },
-  { unit: "数学好玩", items: ["“象征性”长跑", "有趣的折叠", "包装的学问"] },
+  { unit: "数学好玩", items: ['"象征性"长跑', "有趣的折叠", "包装的学问"] },
   { unit: "数据的表示和分析", items: ["复式条形统计图", "复式折线统计图", "平均数的再认识"] },
 ];
 
@@ -34,29 +54,35 @@ const topicMeta = {
   },
 };
 
-const state = load(STORAGE_KEY, {
-  currentTopic: "相遇问题",
-  openUnits: {},
-  records: [],
-  topicStatus: {},
-  photos: [],
-  answers: {},
-  variants: [],
-  variantAnswers: {},
-  variantRound: 0,
-  variantPerfectRounds: 0,
-});
+// State and game are initialized based on current subject
+let state;
+let game;
 
-const game = load(GAME_KEY, {
-  stars: 0,
-  points: 0,
-  streak: 0,
-  lastStudyDate: "",
-  badges: [],
-  topicAttempts: {},
-  masteredTopics: [],
-  unitBadges: [],
-});
+function initState() {
+  const defaultTopic = currentSubject === "english" ? "My Day" : "相遇问题";
+  state = load(getStorageKey(), {
+    currentTopic: defaultTopic,
+    openUnits: {},
+    records: [],
+    topicStatus: {},
+    photos: [],
+    answers: {},
+    variants: [],
+    variantAnswers: {},
+    variantRound: 0,
+    session: { active: false, topic: "", startedAt: "" },
+    unitIssues: {},
+  });
+  game = load(getGameKey(), {
+    stars: 0,
+    points: 0,
+    streak: 0,
+    lastStudyDate: "",
+    badges: [],
+    topicAttempts: {},
+  });
+}
+initState();
 
 let currentProblems = [];
 
@@ -69,8 +95,8 @@ function load(key, fallback) {
 }
 
 function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  localStorage.setItem(GAME_KEY, JSON.stringify(game));
+  localStorage.setItem(getStorageKey(), JSON.stringify(state));
+  localStorage.setItem(getGameKey(), JSON.stringify(game));
 }
 
 function $(id) {
@@ -82,11 +108,17 @@ function todayKey() {
 }
 
 function allTopicNames() {
-  return topics.flatMap((unit) => unit.items);
+  if (currentSubject === "english") {
+    return (window.englishTopics || []).flatMap(function(unit) { return unit.items; });
+  }
+  return topics.flatMap(function(unit) { return unit.items; });
 }
 
 function getUnit(topicName) {
-  return topics.find((unit) => unit.items.includes(topicName))?.unit || "";
+  if (currentSubject === "english") {
+    return (window.englishTopics || []).find(function(unit) { return unit.items.includes(topicName); })?.unit || "";
+  }
+  return topics.find(function(unit) { return unit.items.includes(topicName); })?.unit || "";
 }
 
 function numberAnswer(value, unit = "", tolerance = 0.01) {
@@ -252,24 +284,11 @@ const templates = {
 };
 
 function problemsFor(topicName) {
+  if (currentSubject === "english") {
+    if (window.getEnglishProblems) return window.getEnglishProblems(topicName);
+    return [];
+  }
   if (topicName === "相遇问题") return meetingProblems().slice(0, 5);
-  const aliases = {
-    "通分后进行分数加减": "折纸：异分母分数加减法",
-    "星期日的安排：分数加减混合运算": "星期日的安排",
-    "分数和小数互化": "分数王国与小数王国",
-    "分数、小数大小比较": "分数王国与小数王国",
-    "正方体的认识": "长方体的认识",
-    "长方体和正方体表面积": "长方体的表面积",
-    "求一个数的几分之几是多少": "分数乘法应用题",
-    "体积单位和容积单位": "体积单位",
-    "长方体体积": "长方体的体积",
-    "正方体体积": "长方体的体积",
-    "底面积乘高": "长方体的体积",
-    "体积单位换算": "体积单位的换算",
-    "有趣的测量：不规则物体体积": "有趣的测量",
-    "“象征性”长跑": '"象征性"长跑',
-  };
-  if (aliases[topicName] && window.problemBank?.[aliases[topicName]]) return window.problemBank[aliases[topicName]];
   if (window.problemBank?.[topicName]) return window.problemBank[topicName];
   const unit = getUnit(topicName);
   if (unit === "分数加减法") return templates.fractionAdd(topicName);
@@ -287,7 +306,8 @@ function problemsFor(topicName) {
 function renderNav() {
   const nav = $("topicNav");
   nav.innerHTML = "";
-  topics.forEach((unit) => {
+  const topicList = currentSubject === "english" ? (window.englishTopics || []) : topics;
+  topicList.forEach((unit) => {
     if (state.openUnits[unit.unit] === undefined) state.openUnits[unit.unit] = true;
     const group = document.createElement("div");
     group.className = "unit-group";
@@ -328,6 +348,8 @@ function selectTopic(topicName) {
   state.variants = [];
   state.variantAnswers = {};
   state.variantRound = 0;
+  state.session = { active: false, topic: topicName, startedAt: "" };
+  state.unitIssues = {};
   renderLesson();
   renderNav();
   save();
@@ -335,13 +357,19 @@ function selectTopic(topicName) {
 
 function renderLesson() {
   currentProblems = problemsFor(state.currentTopic);
-  const meta = topicMeta[state.currentTopic] || topicMeta.default;
+  const metaSource = currentSubject === "english" ? (window.englishTopicMeta || {}) : topicMeta;
+  const meta = metaSource[state.currentTopic] || metaSource.default || { goal: "完成练习，检查掌握情况", rule: "认真读题，仔细作答", diagram: "学习" };
+  document.body.dataset.subject = currentSubject;
   $("unitLabel").textContent = getUnit(state.currentTopic);
   $("topicTitle").textContent = state.currentTopic;
   $("lessonGoal").textContent = meta.goal;
   $("coreRule").textContent = meta.rule;
-  document.querySelector(".mini-diagram b").textContent = meta.diagram;
-  $("topicStatus").textContent = state.topicStatus[state.currentTopic]?.mastered ? "已掌握" : state.topicStatus[state.currentTopic]?.attempts ? "需巩固" : "未开始";
+  var diagramEl = document.querySelector(".mini-diagram b");
+  if (diagramEl) diagramEl.textContent = meta.diagram;
+  var topicStatus = state.topicStatus[state.currentTopic];
+  $("topicStatus").textContent = topicStatus?.mastered ? "已掌握" : topicStatus?.attempts ? "需巩固" : "未开始";
+  // Update reward panels visibility
+  updateRewardPanels();
   renderProblems();
   renderVariants();
   renderDiagnosis();
@@ -349,7 +377,15 @@ function renderLesson() {
   renderGame();
 }
 
+function updateRewardPanels() {
+  var mathPanel = $("rewardPanelMath");
+  var engPanel = $("rewardPanelEnglish");
+  if (mathPanel) mathPanel.style.display = currentSubject === "math" ? "" : "none";
+  if (engPanel) engPanel.style.display = currentSubject === "english" ? "" : "none";
+}
+
 function renderProblems() {
+  const activeLesson = state.session?.active && state.session.topic === state.currentTopic;
   const list = $("problemList");
   const template = $("problemTemplate");
   list.innerHTML = "";
@@ -366,12 +402,18 @@ function renderProblems() {
       node.querySelector(".problem-text").insertAdjacentElement("afterend", figure);
     }
     const area = node.querySelector(".answer-area");
+    const prompt = document.createElement("div");
+    prompt.className = "answer-prompt";
+    prompt.innerHTML = `<strong>先写答案</strong><span>${currentSubject === "english" ? "可以先写关键词，再补完整句子。" : "先算一算，再写出结果。"}</span>`;
+    area.appendChild(prompt);
     const grid = document.createElement("div");
     grid.className = "answer-grid";
     problem.answers.forEach((answer, answerIndex) => {
       const label = document.createElement("label");
+      label.className = "answer-box";
       const saved = state.answers[`${index}-${answerIndex}`] || "";
-      label.innerHTML = `<span>${answerIndex + 1}. ${answer.type === "text" ? "说明理由" : `答案${answer.unit ? `（${answer.unit}）` : ""}`}</span><input class="input-field" data-problem="${index}" data-answer="${answerIndex}" value="${escapeHtml(saved)}" ${answer.type === "text" ? "" : 'inputmode="decimal"'} />`;
+      const placeholder = answer.type === "text" ? (currentSubject === "english" ? "写一个完整句子…" : "写清楚你的理由…") : `例如：${answer.unit ? `12${answer.unit}` : "12"}`;
+      label.innerHTML = `<span>${answerIndex + 1}. ${answer.type === "text" ? "我的回答" : `答案${answer.unit ? `（${answer.unit}）` : ""}`}</span><input class="input-field${activeLesson ? "" : " locked"}" data-problem="${index}" data-answer="${answerIndex}" value="${escapeHtml(saved)}" placeholder="${placeholder}" ${activeLesson ? "" : "disabled"} />`;
       grid.appendChild(label);
     });
     area.appendChild(grid);
@@ -379,7 +421,7 @@ function renderProblems() {
       const thinking = document.createElement("label");
       thinking.className = "thinking-label";
       const savedThinking = state.answers[`think-${index}`] || "";
-      thinking.innerHTML = `<span>我这样想：谁走了多少？为什么要相加或相减？</span><textarea class="text-field thinking-field" data-thinking="${index}" placeholder="例如：两个人相向而行，所以要把两个人每分钟走的路程相加。">${escapeHtml(savedThinking)}</textarea>`;
+      thinking.innerHTML = `<span>我这样想：谁走了多少？为什么要相加或相减？</span><textarea class="text-field thinking-field${activeLesson ? "" : " locked"}" data-thinking="${index}" placeholder="例如：两个人相向而行，所以要把两个人每分钟走的路程相加。" ${activeLesson ? "" : "disabled"}>${escapeHtml(savedThinking)}</textarea>`;
       area.appendChild(thinking);
     }
     list.appendChild(node);
@@ -387,12 +429,11 @@ function renderProblems() {
 
   const row = document.createElement("div");
   row.className = "submit-row";
-  row.innerHTML = `<button class="tool-button" type="button" id="submitBtn">提交诊断</button><button class="tool-button secondary" type="button" id="variantBtn">生成变式</button>`;
+  row.innerHTML = `<div class="lesson-lock-note">${activeLesson ? "本轮学习已开始，答案会自动保存。" : "请先点击上方“开始”，再写答案。"}</div><button class="tool-button" type="button" id="submitBtn" ${activeLesson ? "" : "disabled"}>提交诊断</button><button class="tool-button secondary" type="button" id="variantBtn" ${activeLesson ? "" : "disabled"}>生成变式</button>`;
   list.appendChild(row);
   $("submitBtn").addEventListener("click", submitAnswers);
   $("variantBtn").addEventListener("click", () => {
     state.variantRound = 0;
-    state.variantPerfectRounds = 0;
     state.variantAnswers = {};
     state.variants = buildVariants(currentProblems.map(() => true), false);
     renderVariants();
@@ -415,18 +456,31 @@ function rememberAnswer(event) {
 }
 
 function submitAnswers() {
+  if (!state.session?.active || state.session.topic !== state.currentTopic) return;
+  state.unitIssues = {};
   document.querySelectorAll(".answer-area input").forEach((input) => {
     state.answers[`${input.dataset.problem}-${input.dataset.answer}`] = input.value;
+  });
+  document.querySelectorAll(".answer-area textarea").forEach((textarea) => {
+    if (textarea.dataset.thinking !== undefined) {
+      state.answers[`think-${textarea.dataset.thinking}`] = textarea.value;
+    }
   });
   const results = currentProblems.map((problem, index) => gradeProblem(problem, index));
   const correct = results.filter(Boolean).length;
   const score = Math.round((correct / currentProblems.length) * 100);
-  const explanationOk = currentProblems.every((_, index) => explainLooksReasonable(state.answers[`think-${index}`] || ""));
-  const readyForMastery = score >= 90 && explanationOk;
+  var explanationOk;
+  if (currentSubject === "english") {
+    // English: check if all text answers have reasonable length
+    explanationOk = currentProblems.every(function(_, index) {
+      return problemAnswersHaveContent(index);
+    });
+  } else {
+    explanationOk = currentProblems.every(function(_, index) { return explainLooksReasonable(state.answers["think-" + index] || ""); });
+  }
+  const mastered = score >= 85 && explanationOk;
   state.topicStatus[state.currentTopic] = {
-    mastered: false,
-    readyForMastery,
-    variantPassed: false,
+    mastered,
     attempts: (state.topicStatus[state.currentTopic]?.attempts || 0) + 1,
     lastScore: score,
     explanationOk,
@@ -436,34 +490,56 @@ function submitAnswers() {
     score,
     correct,
     total: currentProblems.length,
+    startedAt: state.session.startedAt,
+    durationMinutes: Math.max(1, Math.round((Date.now() - new Date(state.session.startedAt).getTime()) / 60000)),
     time: new Date().toLocaleString("zh-CN"),
   });
   state.records = state.records.slice(0, 20);
   state.variantRound = 0;
-  state.variantPerfectRounds = 0;
   state.variantAnswers = {};
-  state.variants = buildVariants(results, !readyForMastery);
-  updateGame(score, false);
+  state.variants = buildVariants(results, !mastered);
+  updateGame(score, mastered);
   renderFeedback(results);
   renderDiagnosis(results);
   renderVariants();
   renderHistory();
   renderCounts();
-  $("topicStatus").textContent = readyForMastery ? "待追练" : "需巩固";
+  $("topicStatus").textContent = mastered ? "已掌握" : "需巩固";
   renderNav();
   save();
 }
 
 function explainLooksReasonable(raw) {
   const text = String(raw || "").trim();
-  return text.length >= 10 && /(相加|相减|相乘|相除|通分|单位|路程|时间|速度|体积|面积|表面积|容积|方向|方程|平均数|折线|条形|分子|分母|倒数|比例|剩余|总量)/.test(text);
+  return text.length >= 10 && /(相加|相减|速度和|速度差|路程|时间|相向|追上|追及|相背)/.test(text);
+}
+
+function problemAnswersHaveContent(index) {
+  return currentProblems[index].answers.some(function(_, answerIndex) {
+    var raw = String(state.answers[index + "-" + answerIndex] || "").trim();
+    return raw.length >= 2;
+  });
 }
 
 function gradeProblem(problem, index) {
+  // Use English grading if applicable
+  if (currentSubject === "english" && window.gradeEnglishAnswer) {
+    return problem.answers.every(function(answer, answerIndex) {
+      var raw = String(state.answers[index + "-" + answerIndex] || "").trim();
+      return window.gradeEnglishAnswer(answer, raw);
+    });
+  }
   return problem.answers.every((answer, answerIndex) => {
     const raw = String(state.answers[`${index}-${answerIndex}`] || "").trim();
     if (answer.type === "text") return answer.keywords.some((word) => raw.includes(word));
     const value = Number(raw.replace(/[^0-9./-]/g, ""));
+    const numericCorrect = raw.includes("/") && !raw.includes(".")
+      ? (() => { const [a, b] = raw.split("/").map(Number); return b && Math.abs(a / b - answer.value) <= answer.tolerance; })()
+      : Number.isFinite(value) && Math.abs(value - answer.value) <= answer.tolerance;
+    if (numericCorrect && answer.unit && !raw.includes(answer.unit)) {
+      state.unitIssues[`${index}-${answerIndex}`] = `答案对了，但单位“${answer.unit}”漏了。`;
+      return false;
+    }
     if (raw.includes("/") && !raw.includes(".")) {
       const [a, b] = raw.split("/").map(Number);
       return b && Math.abs(a / b - answer.value) <= answer.tolerance;
@@ -475,12 +551,16 @@ function gradeProblem(problem, index) {
 function renderFeedback(results) {
   document.querySelectorAll(".problem-card").forEach((card, index) => {
     const feedback = card.querySelector(".problem-feedback");
+    var label = currentSubject === "english" ? "Good job! " : "答对了。";
+    var retryLabel = currentSubject === "english" ? "Try again. Hint: " : "再想想。提示：";
     feedback.className = `problem-feedback show ${results[index] ? "ok" : "bad"}`;
-    feedback.textContent = results[index] ? `答对了。${currentProblems[index].insight}` : `再想想。提示：${currentProblems[index].insight}`;
+    const unitIssue = Object.values(state.unitIssues || {}).find((text) => text);
+    feedback.textContent = results[index] ? label + currentProblems[index].insight : unitIssue || retryLabel + currentProblems[index].insight;
   });
 }
 
-function renderDiagnosis(results = null) {
+function renderDiagnosis(results) {
+  results = results || null;
   const status = state.topicStatus[state.currentTopic];
   if (!status) {
     $("scoreBadge").textContent = "待提交";
@@ -488,17 +568,25 @@ function renderDiagnosis(results = null) {
     $("diagnosisBody").textContent = "完成题目后提交。";
     return;
   }
-  $("scoreBadge").textContent = `${status.lastScore}分`;
-  const wrongCount = results ? results.filter((ok) => !ok).length : Math.max(0, currentProblems.length - Math.round((status.lastScore / 100) * currentProblems.length));
+  $("scoreBadge").textContent = status.lastScore + "分";
+  const wrongCount = results ? results.filter(function(ok) { return !ok; }).length : Math.max(0, currentProblems.length - Math.round((status.lastScore / 100) * currentProblems.length));
   $("diagnosisBody").className = "";
-  $("diagnosisBody").innerHTML = status.mastered
-    ? `<p><strong>✅ 真正掌握：可以进入下一知识点。</strong></p><p>你基础题高于90分，追练连续两轮全对，也能讲清方法。</p>`
-    : status.readyForMastery
-      ? `<p><strong>🟡 基础题通过，还要过追练关。</strong></p><p>你基础题达到${status.lastScore}分，也写出了方法。现在需要连续两轮追练全对，才能拿到知识点碎片。</p>`
-      : `<p><strong>🔵 还需要巩固。</strong></p><p>本轮约有 ${wrongCount} 道题需要复盘。${status.explanationOk ? "答案有进步，继续做错题变式。" : "先把方法写清楚，再继续做题。"}</p>`;
+  if (currentSubject === "english") {
+    $("diagnosisBody").innerHTML = status.mastered
+      ? "<p><strong>Great! 可以进入下一单元。</strong></p><p>词汇、句型、语法都掌握得很好，继续保持！</p>"
+      : "<p><strong>需要更多练习。</strong></p><p>本轮约有 " + wrongCount + " 道题需要复盘。" + (status.explanationOk ? "每题都有作答，但还需要提高准确率。" : "请确保每道题都认真作答。") + "</p>";
+  } else {
+    $("diagnosisBody").innerHTML = status.mastered
+      ? "<p><strong>可以进入下一知识点。</strong></p><p>本轮表现稳定，而且每题都写出了等量关系。</p>"
+      : "<p><strong>需要举一反三。</strong></p><p>本轮约有 " + wrongCount + " 道题需要复盘。" + (status.explanationOk ? "答案基本对，但还要继续检查题型变化。" : "还需要写清\"谁走了多少、谁和谁相加或相减\"。") + "</p>";
+  }
 }
 
 function buildVariants(results, focusWrong) {
+  // Use English variant builder if applicable
+  if (currentSubject === "english") {
+    return buildEnglishVariants(results, focusWrong);
+  }
   const wrongIndexes = results
     .map((ok, index) => ({ ok, index }))
     .filter((item) => !item.ok)
@@ -507,68 +595,34 @@ function buildVariants(results, focusWrong) {
   return sourceIndexes.slice(0, 4).map((problemIndex, index) => makeVariant(currentProblems[problemIndex], problemIndex, index));
 }
 
+function buildEnglishVariants(results, focusWrong) {
+  var wrongIndexes = [];
+  results.forEach(function(ok, index) { if (!ok) wrongIndexes.push(index); });
+  var sourceIndexes = focusWrong && wrongIndexes.length ? wrongIndexes : currentProblems.slice(-2).map(function(_, index, list) { return currentProblems.length - list.length + index; });
+  var round = (state.variantRound || 0) + 1;
+  return sourceIndexes.slice(0, 3).map(function(problemIndex, index) {
+    if (window.makeEnglishVariant) {
+      return window.makeEnglishVariant(currentProblems[problemIndex], index, round);
+    }
+    return makeVariant(currentProblems[problemIndex], problemIndex, index);
+  });
+}
+
 function makeVariant(problem, problemIndex, variantIndex) {
   const round = state.variantRound + 1;
   if (state.currentTopic === "相遇问题") {
     return makeMeetingVariant(problem.variantSeed, round, variantIndex);
   }
-  const mode = ["换情境", "换问法", "易错辨析"][(round - 1) % 3];
-  const variant = makeGenericVariant(problem, round, variantIndex, mode);
-  return {
-    ...variant,
-    title: `第${round}轮追练：${problem.type}·${mode}`,
-    hint: problem.insight,
-    sourceProblem: problem,
-  };
-}
-
-function makeGenericVariant(problem, round, index, mode) {
-  const numericVariant = makeSafeNumericVariant(problem, round, index);
-  if (mode === "换情境" && numericVariant) return numericVariant;
-  const sceneText = problem.text
-    .replace(/小明|小美|小杰|小林|小雪|哥哥|妹妹/g, ["小航", "小雨", "小乐"][index % 3])
-    .replace(/苹果|果汁|纸|盒子|书|水/g, ["饼干", "牛奶", "彩纸"][index % 3]);
-  if (mode === "换问法") {
-    return {
-      text: `${sceneText}\n换问法：先不要计算，写出解决这道题最关键的数量关系或方法。`,
-      answer: { type: "text", keywords: keywordHints(problem.insight) },
-    };
-  }
-  if (mode === "易错辨析") {
-    return {
-      text: `${sceneText}\n易错辨析：这道题最容易把什么弄错？请写一个关键词。`,
-      answer: { type: "text", keywords: keywordHints(problem.insight) },
-    };
-  }
-  return {
-    text: `${sceneText}\n换情境：题目中的人物和物品换了，但数量关系没有变，请重新计算。`,
-    answer: problem.answers[0],
-  };
-}
-
-function makeSafeNumericVariant(problem, round, index) {
   const answer = problem.answers[0];
-  if (!answer || answer.type !== "number") return null;
-  const seed = problem.variantSeed || problem.type || "";
-  const delta = round + index + 1;
-  const rules = [
-    [/通分|折纸|剩余|分数|读书|果汁/, () => ({ text: `小乐用一张彩纸的1/${4 + delta}做星星，用1/${6 + delta}做花朵，一共用了这张彩纸的几分之几？`, value: 1 / (4 + delta) + 1 / (6 + delta), unit: "张" })],
-    [/面积|表面积|体积|容积|长方体|正方体|底面积/, () => { const l = 4 + delta, w = 3 + index, h = 2 + round; return { text: `一个长方体盒子长${l}厘米、宽${w}厘米、高${h}厘米。它的体积是多少立方厘米？`, value: l * w * h, unit: "立方厘米" }; }],
-    [/单位|换算|毫升|立方/, () => { const value = 200 + delta * 100; return { text: `${value}毫升等于多少立方厘米？`, value, unit: "立方厘米" }; }],
-    [/平均|统计|条形|折线/, () => { const a = 70 + delta, b = 80 + delta, c = 90 + delta; return { text: `三次数学小测成绩分别是${a}分、${b}分、${c}分，平均多少分？`, value: (a + b + c) / 3, unit: "分" }; }],
-    [/方程|邮票|倍数/, () => { const x = 8 + delta; return { text: `哥哥有${x * 2 + 4}张邮票，比妹妹的2倍多4张。妹妹有多少张邮票？`, value: x, unit: "张" }; }],
-    [/分数乘|分数除|倒数|几分之几/, () => { const total = 24 + delta * 6; return { text: `一根绳子长${total}米，剪去它的1/3，还剩多少米？`, value: total * 2 / 3, unit: "米" }; }],
-  ];
-  const rule = rules.find(([pattern]) => pattern.test(seed));
-  if (!rule) return null;
-  const next = rule[1]();
-  return { text: `${next.text}\n换数字：数量改变了，请重新计算。`, answer: { type: "number", value: next.value, unit: next.unit, tolerance: 0.01 } };
-}
-
-function keywordHints(insight) {
-  const words = ["通分", "单位", "相加", "相减", "相乘", "相除", "体积", "面积", "表面积", "容积", "方向", "方程", "平均数", "折线", "条形", "倒数", "速度和", "速度差", "剩余", "比较", "换算"];
-  const matched = words.filter((word) => insight.includes(word));
-  return matched.length ? matched : [insight.slice(0, 3)];
+  const number = answer.type === "number" ? answer.value : null;
+  const extra = number !== null ? `原题答案附近再换一个数字，正确结果应接近${number}。` : `先说清${problem.type}的关键关系，再写答案。`;
+  return {
+    title: `第${round}轮追练：${problem.type}`,
+    text: `${problem.text}
+追练要求：${extra}`,
+    answer,
+    hint: problem.insight,
+  };
 }
 
 function makeMeetingVariant(seed, round, index) {
@@ -634,7 +688,7 @@ function renderVariants() {
     ? state.variants.map((item, index) => {
         const saved = state.variantAnswers[index] || "";
         return `<div class="variant-item"><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.text)}</p><input class="variant-answer" data-variant="${index}" value="${escapeHtml(saved)}" placeholder="写答案或说明理由" /><div class="variant-feedback" id="variantFeedback${index}"></div></div>`;
-      }).join("") + `<div class="variant-note">连续两轮追练都答对，就可以进入下一个知识点。</div><div class="variant-actions"><button class="tool-button" type="button" id="submitVariantsBtn">提交追练</button></div>`
+      }).join("") + `<div class="variant-note">错题会继续生成下一轮追练，直到本轮全部答对。</div><div class="variant-actions"><button class="tool-button" type="button" id="submitVariantsBtn">提交追练</button></div>`
     : `<div class="empty-state">提交后会根据结果生成追练题。</div>`;
   $("variantList").querySelectorAll(".variant-answer").forEach((input) => input.addEventListener("input", (event) => {
     state.variantAnswers[event.currentTarget.dataset.variant] = event.currentTarget.value;
@@ -646,61 +700,37 @@ function renderVariants() {
 
 function submitVariants() {
   const results = state.variants.map((item, index) => gradeVariant(item, index));
-  const wrong = results.filter((ok) => !ok).length;
+  const wrong = results.filter(function(ok) { return !ok; }).length;
   state.variants.forEach((item, index) => {
     const feedback = $(`variantFeedback${index}`);
     if (!feedback) return;
     feedback.className = `variant-feedback ${results[index] ? "ok" : "bad"}`;
-    feedback.textContent = results[index] ? `答对了。${item.hint}` : `还需要再练。提示：${item.hint}`;
+    var okLabel = currentSubject === "english" ? "Correct! " : "答对了。";
+    var retryLabel = currentSubject === "english" ? "Keep trying. Hint: " : "还需要再练。提示：";
+    feedback.textContent = results[index] ? okLabel + item.hint : retryLabel + item.hint;
   });
   if (wrong === 0) {
-    state.variantPerfectRounds = (state.variantPerfectRounds || 0) + 1;
-    if (state.variantPerfectRounds >= 2) {
-      state.variants = [];
-      state.variantAnswers = {};
-      completeTopicMastery();
-      save();
-      setTimeout(() => {
-        $("variantBadge").textContent = "完成";
-        $("variantList").innerHTML = `<div class="empty-state">连续两轮追练都答对了，已掌握，可以进入下一个知识点。</div>`;
-      }, 900);
-      return;
-    }
     state.variantRound += 1;
     state.variantAnswers = {};
-    state.variants = state.variants.map((item, index) => makeFollowUpVariant(item, index));
-    setTimeout(() => renderVariants(), 900);
+    state.variants = state.variants.map(function(item, index) { return makeFollowUpVariant(item, index); });
+    setTimeout(function() { renderVariants(); }, 900);
   } else {
-    state.variantPerfectRounds = 0;
-    const next = state.variants.filter((_, index) => !results[index]);
+    const next = state.variants.filter(function(_, index) { return !results[index]; });
     state.variantRound += 1;
     state.variantAnswers = {};
-    state.variants = next.map((item, index) => makeFollowUpVariant(item, index));
-    setTimeout(() => renderVariants(), 1200);
+    state.variants = next.map(function(item, index) { return makeFollowUpVariant(item, index); });
+    setTimeout(function() { renderVariants(); }, 1200);
   }
   save();
-}
-
-function completeTopicMastery() {
-  const status = state.topicStatus[state.currentTopic] || {};
-  status.mastered = true;
-  status.variantPassed = true;
-  status.readyForMastery = true;
-  state.topicStatus[state.currentTopic] = status;
-  if (!game.masteredTopics.includes(state.currentTopic)) game.masteredTopics.push(state.currentTopic);
-  if (!game.badges.includes(state.currentTopic)) game.badges.push(state.currentTopic);
-  const unit = getUnit(state.currentTopic);
-  if (unit && topics.find((item) => item.unit === unit)?.items.every((topic) => game.masteredTopics.includes(topic)) && !game.unitBadges.includes(unit)) {
-    game.unitBadges.push(unit);
-  }
-  $("topicStatus").textContent = "已掌握";
-  renderGame();
 }
 
 function gradeVariant(item, index) {
   const raw = String(state.variantAnswers[index] || "").trim();
   const answer = item.answer;
-  if (answer.type === "text") return answer.keywords.some((word) => raw.includes(word));
+  if (currentSubject === "english" && window.gradeEnglishAnswer) {
+    return window.gradeEnglishAnswer(answer, raw);
+  }
+  if (answer.type === "text") return answer.keywords.some(function(word) { return raw.includes(word); });
   const value = Number(raw.replace(/[^0-9./-]/g, ""));
   if (raw.includes("/") && !raw.includes(".")) {
     const [a, b] = raw.split("/").map(Number);
@@ -710,10 +740,19 @@ function gradeVariant(item, index) {
 }
 
 function makeFollowUpVariant(item, index) {
+  if (currentSubject === "english") {
+    if (window.makeEnglishFollowUpVariant) {
+      return window.makeEnglishFollowUpVariant(item, state.variantRound + 1);
+    }
+    return item;
+  }
   if (state.currentTopic === "相遇问题") {
     return makeMeetingVariant(item.variantSeed || "同时相向", state.variantRound + 1, index);
   }
-  return makeVariant(item.sourceProblem || item, index, index);
+  return {
+    ...item,
+    title: `第${state.variantRound + 1}轮追练：${item.title.replace(/^第\d+轮追练：/, "")}`,
+  };
 }
 
 function updateGame(score, mastered) {
@@ -723,44 +762,98 @@ function updateGame(score, mastered) {
     game.streak = game.lastStudyDate === yesterday ? game.streak + 1 : 1;
     game.lastStudyDate = today;
   }
-  game.stars += 1 + (score >= 80 ? 2 : 0) + (score >= 90 ? 1 : 0);
-  game.points += 1 + (score >= 80 ? 2 : 0) + (score >= 90 ? 1 : 0);
+  game.stars += Math.max(1, Math.round(score / 20));
+  game.points += Math.max(4, Math.round(score / 10) + (mastered ? 4 : 0));
+  if (mastered && !game.badges.includes(state.currentTopic)) game.badges.push(state.currentTopic);
   game.topicAttempts[state.currentTopic] = (game.topicAttempts[state.currentTopic] || 0) + 1;
 }
 
 function renderGame() {
   document.querySelector(".streak-count").textContent = String(game.streak);
   document.querySelector(".star-count").textContent = String(game.stars);
-  const tasks = [
-    state.topicStatus[state.currentTopic]?.attempts ? "今日已练" : "完成1次练习",
-    state.photos.length ? "已上传作答" : "上传草稿照片",
-    game.badges.includes(state.currentTopic) ? "已拿徽章" : "冲刺100分",
-  ];
-  $("dailyTasks").innerHTML = tasks.map((task) => `<span>${task}</span>`).join("");
+  var tasks;
+  if (currentSubject === "english") {
+    tasks = [
+      state.topicStatus[state.currentTopic]?.attempts ? "今日已练" : "完成1次练习",
+      game.badges.includes(state.currentTopic) ? "已拿徽章" : "冲刺85分",
+    ];
+  } else {
+    tasks = [
+      state.topicStatus[state.currentTopic]?.attempts ? "今日已练" : "完成1次练习",
+      state.photos.length ? "已上传作答" : "上传草稿照片",
+      game.badges.includes(state.currentTopic) ? "已拿徽章" : "冲刺85分",
+    ];
+  }
+  $("dailyTasks").innerHTML = tasks.map(function(task) { return "<span>" + task + "</span>"; }).join("");
   renderRewards();
 }
 
 function renderRewards() {
-  const total = allTopicNames().length;
-  const done = game.masteredTopics.length;
-  const percent = Math.round((done / total) * 100);
-  $("shoePoints").textContent = `${done}/${total}`;
-  const finalShoe = shoeRewards[shoeRewards.length - 1];
-  $("rewardProgress").innerHTML = `<div class="final-shoe-goal"><img src="${finalShoe.image}" alt="${escapeHtml(finalShoe.name)}" /><div><strong>最终球鞋：${escapeHtml(finalShoe.name)}</strong><small>${escapeHtml(finalShoe.subtitle)}</small></div></div><div class="reward-track"><span style="width:${percent}%"></span></div><strong>球鞋进度：${done}/${total} 个知识点</strong><span>${done === total ? "🏆 全部知识点真正掌握，Kobe 6 已解锁！" : `还差 ${total - done} 个知识点，最终奖励是 Kobe 6。`}</span>`;
-  const units = topics.map((unit) => ({ unit: unit.unit, done: unit.items.filter((topic) => game.masteredTopics.includes(topic)).length, total: unit.items.length }));
-  $("rewardWall").innerHTML = units.map((item) => `<div class="shoe-card ${item.done === item.total ? "unlocked" : "locked"}"><div class="shoe-art"><span>🏀</span></div><div><strong>${escapeHtml(item.unit)}</strong><small>${item.done}/${item.total} 个知识点真正掌握</small><em>${item.done === item.total ? "单元徽章已获得" : `还差${item.total - item.done}个`}</em></div></div>`).join("");
+  if (currentSubject === "english") {
+    renderBadmintonRewards();
+  } else {
+    renderShoeRewards();
+  }
+}
+
+function renderShoeRewards() {
+  var shoeEl = $("shoePoints");
+  if (shoeEl) shoeEl.textContent = game.points + "分";
+  const earned = shoeRewards.filter(function(reward) { return game.points >= reward.points; });
+  const next = shoeRewards.find(function(reward) { return game.points < reward.points; });
+  if (!next) {
+    $("rewardProgress").innerHTML = "<strong>🏆 已解锁全部球鞋奖励！</strong><span>你已经完成冠军级训练。</span>";
+  } else {
+    const gap = next.points - game.points;
+    const percent = Math.max(0, Math.min(100, (game.points / next.points) * 100));
+    $("rewardProgress").innerHTML = `<div class="reward-track"><span style="width:${percent}%"></span></div><strong>距离 ${next.name} 还差 ${gap} 分</strong><span>再完成一轮练习就更接近新球鞋。</span>`;
+  }
+  $("rewardWall").innerHTML = shoeRewards.map(function(reward) {
+    const unlocked = game.points >= reward.points;
+    const gap = Math.max(0, reward.points - game.points);
+    return `<div class="shoe-card ${unlocked ? "unlocked" : "locked"}">
+      <div class="shoe-art" style="--shoe:${reward.color};--accent:${reward.accent}"><img src="${reward.image}" alt="${escapeHtml(reward.name)}" /><span></span></div>
+      <div><strong>${escapeHtml(reward.name)}</strong><small>${escapeHtml(reward.subtitle)}</small><em>${unlocked ? "已解锁" : "还差" + gap + "分"}</em></div>
+    </div>`;
+  }).join("");
+}
+
+function renderBadmintonRewards() {
+  var batEl = $("badmintonPoints");
+  if (batEl) batEl.textContent = game.points + "分";
+  const earned = badmintonRewards.filter(function(reward) { return game.points >= reward.points; });
+  const next = badmintonRewards.find(function(reward) { return game.points < reward.points; });
+  var progressEl = $("badmintonProgress");
+  if (!next) {
+    if (progressEl) progressEl.innerHTML = "<strong>🏆 已解锁全部羽毛球拍奖励！</strong><span>你是英语学习冠军！</span>";
+  } else {
+    const gap = next.points - game.points;
+    const percent = Math.max(0, Math.min(100, (game.points / next.points) * 100));
+    if (progressEl) progressEl.innerHTML = `<div class="reward-track"><span style="width:${percent}%"></span></div><strong>距离 ${next.name} 还差 ${gap} 分</strong><span>继续完成练习解锁新装备！</span>`;
+  }
+  var wallEl = $("badmintonWall");
+  if (wallEl) wallEl.innerHTML = badmintonRewards.map(function(reward) {
+    const unlocked = game.points >= reward.points;
+    const gap = Math.max(0, reward.points - game.points);
+    return `<div class="shoe-card ${unlocked ? "unlocked" : "locked"}">
+      <div class="shoe-art badminton-art" style="--shoe:${reward.color};--accent:${reward.accent}">
+        <img src="${reward.image}" alt="${escapeHtml(reward.name)}" />
+      </div>
+      <div><strong>${escapeHtml(reward.name)}</strong><small>${escapeHtml(reward.subtitle)}</small><em>${unlocked ? "已解锁" : "还差" + gap + "分"}</em></div>
+    </div>`;
+  }).join("");
 }
 
 function renderCounts() {
   const statuses = Object.values(state.topicStatus);
-  $("masteredCount").textContent = statuses.filter((item) => item.mastered).length;
-  $("reviewCount").textContent = statuses.filter((item) => item.attempts && !item.mastered).length;
-  $("photoCount").textContent = state.photos.length;
+  $("masteredCount").textContent = statuses.filter(function(item) { return item.mastered; }).length;
+  $("reviewCount").textContent = statuses.filter(function(item) { return item.attempts && !item.mastered; }).length;
+  if ($("photoCount")) $("photoCount").textContent = state.photos.length;
 }
 
 function renderHistory() {
   $("historyList").innerHTML = state.records.length
-    ? state.records.map((record) => `<div class="history-item"><strong>${escapeHtml(record.topic)}：${record.score}分</strong><p>${record.time}，${record.correct}/${record.total}题正确</p></div>`).join("")
+    ? state.records.map(function(record) { return `<div class="history-item"><strong>${escapeHtml(record.topic)}：${record.score}分</strong><p>${record.time}，${record.correct}/${record.total}题正确</p></div>`; }).join("")
     : `<div class="empty-state">还没有学习记录。</div>`;
 }
 
@@ -801,7 +894,8 @@ function resetTopic() {
   state.variants = [];
   state.variantAnswers = {};
   state.variantRound = 0;
-  state.variantPerfectRounds = 0;
+  state.session = { active: false, topic: state.currentTopic, startedAt: "" };
+  state.unitIssues = {};
   renderLesson();
   save();
 }
@@ -812,55 +906,172 @@ function clearHistory() {
   save();
 }
 
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+}
+
+function switchSubject(subject) {
+  if (subject === currentSubject) return;
+  currentSubject = subject;
+  localStorage.setItem(SUBJECT_KEY, JSON.stringify(currentSubject));
+  // Re-init state for new subject
+  initState();
+  // Update tab UI
+  updateSubjectTabs();
+  // Update brand
+  updateBrand();
+  // Full re-render
+  renderNav();
+  renderLesson();
+  renderHistory();
+  renderPhotos();
+  updateRewardPanels();
+}
+
+function updateSubjectTabs() {
+  var mathTab = $("mathTab");
+  var englishTab = $("englishTab");
+  if (mathTab) {
+    mathTab.className = "subject-tab" + (currentSubject === "math" ? " active" : "");
+  }
+  if (englishTab) {
+    englishTab.className = "subject-tab" + (currentSubject === "english" ? " active" : "");
+  }
+}
+
+function updateBrand() {
+  var brandMark = document.querySelector(".brand-mark");
+  var subjectTitle = $("subjectTitle");
+  var brandP = document.querySelector(".brand p");
+  if (currentSubject === "english") {
+    if (brandMark) { brandMark.textContent = "英"; brandMark.className = "brand-mark english-mark"; }
+    if (subjectTitle) subjectTitle.textContent = "五下英语";
+    if (brandP) brandP.textContent = "外研社版";
+    document.body.classList.add("english-theme");
+    var encText = document.querySelector(".game-encourage-text");
+    if (encText) encText.textContent = "Practice makes perfect!";
+    var startBtn = $("startBtn");
+    if (startBtn) startBtn.innerHTML = '<span aria-hidden="true">▶</span> 开始';
+  } else {
+    if (brandMark) { brandMark.textContent = "数"; brandMark.className = "brand-mark math-mark"; }
+    if (subjectTitle) subjectTitle.textContent = "五下数学";
+    if (brandP) brandP.textContent = "北师大版";
+    document.body.classList.remove("english-theme");
+    var encText2 = document.querySelector(".game-encourage-text");
+    if (encText2) encText2.textContent = "思考让大脑更聪明！";
+    var startBtn2 = $("startBtn");
+    if (startBtn2) startBtn2.innerHTML = '<span aria-hidden="true">▶</span> 开始';
+  }
+  // Photos only for math
+  var photoSection = document.querySelector(".upload-panel");
+  if (photoSection) photoSection.style.display = currentSubject === "math" ? "" : "none";
+  var photoReviewBtn = $("reviewPhotoBtn");
+  if (photoReviewBtn) photoReviewBtn.style.display = currentSubject === "math" ? "" : "none";
+}
+
+function init() {
+  // Subject tabs
+  var mathTab = $("mathTab");
+  var englishTab = $("englishTab");
+  if (mathTab) mathTab.addEventListener("click", function() { switchSubject("math"); });
+  if (englishTab) englishTab.addEventListener("click", function() { switchSubject("english"); });
+  updateSubjectTabs();
+  updateBrand();
+
+  if (!allTopicNames().includes(state.currentTopic)) {
+    state.currentTopic = currentSubject === "english" ? "My Day" : "相遇问题";
+  }
+  $("startBtn").addEventListener("click", function() {
+    state.session = { active: true, topic: state.currentTopic, startedAt: new Date().toISOString() };
+    save();
+    renderLesson();
+  });
+  $("resetBtn").addEventListener("click", resetTopic);
+  $("clearHistoryBtn").addEventListener("click", clearHistory);
+  var photoInput = $("photoInput");
+  if (photoInput) photoInput.addEventListener("change", handlePhotos);
+  var reviewBtn = $("reviewPhotoBtn");
+  if (reviewBtn) reviewBtn.addEventListener("click", reviewPhotoAnswers);
+  var closeBtn = $("closePhotoReviewBtn");
+  if (closeBtn) closeBtn.addEventListener("click", function() { $("photoReviewDialog").close(); });
+  var askAiBtn = $("askAiBtn");
+  if (askAiBtn) askAiBtn.addEventListener("click", askAiHint);
+  renderNav();
+  renderLesson();
+  renderHistory();
+  renderPhotos();
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("service-worker.js").catch(function() {});
+}
+
 async function askAiHint() {
-  const button = $("askAiBtn");
-  const question = $("aiQuestion").value.trim();
+  var button = $("askAiBtn");
+  var question = String($("aiQuestion")?.value || "").trim();
   if (!question) {
-    $("aiAnswer").textContent = "先写下你卡住的地方，例如：我不知道第一步怎么做。";
+    $("aiState").textContent = "先写问题";
+    $("aiAnswer").textContent = "你可以问：这题第一步做什么？为什么这里用 at？";
     return;
   }
-
   button.disabled = true;
   button.textContent = "AI 思考中...";
-  $("aiAnswer").textContent = "正在生成提示...";
-
+  $("aiState").textContent = "正在回答";
   try {
-    const response = await fetch("https://grade5-math-coach-api.vercel.app/api/deepseek", {
+    var context = `${currentSubject === "english" ? "外研社版五年级下册英语" : "北师大版五年级下册数学"}；当前知识点：${state.currentTopic}；请先给提示和追问，不要直接给完整答案。`;
+    var response = await fetch("https://grade5-math-coach-api.vercel.app/api/deepseek", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        question,
-        context: `当前知识点：${state.currentTopic}。核心关系：${topicMeta[state.currentTopic]?.rule || topicMeta.default.rule}`,
-      }),
+      body: JSON.stringify({ question: question, context: context }),
     });
-    const data = await response.json();
-    $("aiAnswer").textContent = data.answer || data.error || "暂时没有生成提示。";
-  } catch {
-    $("aiAnswer").textContent = "AI 服务暂时不可用，请稍后再试。";
+    if (!response.ok) throw new Error("AI request failed");
+    var data = await response.json();
+    $("aiAnswer").textContent = data.answer || data.content || data.message || "AI 已收到问题，请再换一种问法试试。";
+    $("aiState").textContent = "已回答";
+  } catch (error) {
+    $("aiState").textContent = "暂不可用";
+    $("aiAnswer").textContent = "AI 服务暂时不可用。你先说说自己想到的第一步，我会根据你的思路继续提示。";
   } finally {
     button.disabled = false;
     button.textContent = "问 AI 提示";
   }
 }
 
-function escapeHtml(value) {
-  return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
-}
+function askAiHint() {
+  var questionEl = $("aiQuestion");
+  var answerEl = $("aiAnswer");
+  var stateEl = $("aiState");
+  if (!questionEl || !answerEl) return;
+  var question = questionEl.value.trim();
+  if (!question) { answerEl.textContent = "请先输入你的问题。"; answerEl.className = "ai-answer"; return; }
 
-function init() {
-  if (!allTopicNames().includes(state.currentTopic)) state.currentTopic = "相遇问题";
-  $("startBtn").addEventListener("click", () => renderLesson());
-  $("resetBtn").addEventListener("click", resetTopic);
-  $("clearHistoryBtn").addEventListener("click", clearHistory);
-  $("photoInput").addEventListener("change", handlePhotos);
-  $("reviewPhotoBtn").addEventListener("click", reviewPhotoAnswers);
-  $("closePhotoReviewBtn").addEventListener("click", () => $("photoReviewDialog").close());
-  $("askAiBtn").addEventListener("click", askAiHint);
-  renderNav();
-  renderLesson();
-  renderHistory();
-  renderPhotos();
-  if ("serviceWorker" in navigator) navigator.serviceWorker.register("service-worker.js").catch(() => {});
+  var context = currentSubject === "english"
+    ? "五年级下册英语 - 当前学习：" + state.currentTopic
+    : "五年级下册数学 - 当前学习：" + state.currentTopic;
+
+  if (stateEl) stateEl.textContent = "思考中...";
+  answerEl.textContent = "正在请教 AI 学习伙伴...";
+  answerEl.className = "ai-answer";
+
+  fetch("/api/deepseek", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question: question, context: context, subject: currentSubject })
+  })
+  .then(function(resp) { return resp.json(); })
+  .then(function(data) {
+    if (data.answer) {
+      answerEl.textContent = data.answer;
+      answerEl.className = "ai-answer";
+      if (stateEl) stateEl.textContent = "已回答";
+    } else {
+      answerEl.textContent = "AI 暂时无法回答，请稍后再试。";
+      answerEl.className = "ai-answer";
+      if (stateEl) stateEl.textContent = "出错";
+    }
+  })
+  .catch(function() {
+    answerEl.textContent = "网络连接失败，请检查网络后重试。";
+    answerEl.className = "ai-answer";
+    if (stateEl) stateEl.textContent = "离线";
+  });
 }
 
 function reviewPhotoAnswers() {

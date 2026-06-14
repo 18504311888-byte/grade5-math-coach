@@ -4,17 +4,29 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f7f9fc" />
-    <title>五下数学学习器</title>
+    <title>五下学习器 — 数学·英语</title>
     <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="stylesheet" href="styles.css?v=22" />
+    <link rel="stylesheet" href="styles.css?v=23" />
   </head>
   <body>
     <div class="app-shell">
+      <!-- 学科切换栏 -->
+      <div class="subject-bar" id="subjectBar">
+        <button type="button" class="subject-tab active" data-subject="math" id="mathTab">
+          <span class="subject-icon">📐</span>
+          <span>数学</span>
+        </button>
+        <button type="button" class="subject-tab" data-subject="english" id="englishTab">
+          <span class="subject-icon">📖</span>
+          <span>英语</span>
+        </button>
+      </div>
+
       <aside class="rail" aria-label="知识点">
-        <div class="brand">
-          <div class="brand-mark">数</div>
+        <div class="brand" id="brandArea">
+          <div class="brand-mark math-mark">数</div>
           <div>
-            <h1>五下数学</h1>
+            <h1 id="subjectTitle">五下数学</h1>
             <p>北师大版</p>
           </div>
         </div>
@@ -121,13 +133,12 @@
 
             <div class="ai-panel">
               <div class="panel-title">
-                <h3>AI 提示</h3>
-                <span>DeepSeek</span>
+                <h3>AI 学习伙伴</h3>
+                <span id="aiState">随时可问</span>
               </div>
-              <p class="ai-note">不会直接告诉答案，只给思考提示。</p>
-              <textarea id="aiQuestion" class="ai-question" rows="3" placeholder="例如：我不知道第一步怎么做"></textarea>
+              <textarea id="aiQuestion" class="text-field ai-question" placeholder="例如：为什么这里要用 at？或者：这道相遇题第一步怎么算？"></textarea>
               <button id="askAiBtn" class="tool-button secondary" type="button">问 AI 提示</button>
-              <div id="aiAnswer" class="ai-answer empty-state">先把你的想法写出来，我再给提示。</div>
+              <div id="aiAnswer" class="ai-answer empty-state">AI 会先给提示，不直接把答案全部说出来。</div>
             </div>
 
             <div class="variant-panel">
@@ -146,13 +157,21 @@
               <div id="historyList" class="history-list"></div>
             </div>
 
-            <div class="reward-panel">
+            <div class="reward-panel" id="rewardPanelMath">
               <div class="panel-title">
-                <h3>最终球鞋目标</h3>
-                <span id="shoePoints">0/41</span>
+                <h3>🏀 球鞋奖励墙</h3>
+                <span id="shoePoints">0分</span>
               </div>
               <div id="rewardProgress" class="reward-progress"></div>
               <div id="rewardWall" class="reward-wall"></div>
+            </div>
+            <div class="reward-panel" id="rewardPanelEnglish" style="display:none">
+              <div class="panel-title">
+                <h3>🏸 羽毛球拍奖励墙</h3>
+                <span id="badmintonPoints">0分</span>
+              </div>
+              <div id="badmintonProgress" class="reward-progress"></div>
+              <div id="badmintonWall" class="reward-wall"></div>
             </div>
           </aside>
         </section>
@@ -180,7 +199,8 @@
       <img id="photoReviewImage" alt="作答照片" />
     </dialog>
 
-    <script src="problem-bank.js?v=22" defer></script>
-    <script src="app.js?v=22" defer></script>
+    <script src="problem-bank.js?v=23" defer></script>
+    <script src="english-bank.js?v=23" defer></script>
+    <script src="app.js?v=23" defer></script>
   </body>
 </html>
