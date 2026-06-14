@@ -125,6 +125,26 @@ function numberAnswer(value, unit = "", tolerance = 0.01) {
   return { type: "number", value, unit, tolerance };
 }
 
+function formatAnswerExample(answer) {
+  if (!answer.unit && Number.isInteger(answer.value)) return String(answer.value);
+  if (Number.isInteger(answer.value)) return `${answer.value}${answer.unit || ""}`;
+  const fraction = toSimpleFraction(answer.value);
+  if (fraction) return `${fraction}${answer.unit || ""}`;
+  return `${Number(answer.value.toFixed(2))}${answer.unit || ""}`;
+}
+
+function toSimpleFraction(value) {
+  for (let denominator = 2; denominator <= 100; denominator += 1) {
+    const numerator = Math.round(value * denominator);
+    if (Math.abs(numerator / denominator - value) < 0.0001) {
+      const gcd = (a, b) => b ? gcd(b, a % b) : a;
+      const divisor = gcd(Math.abs(numerator), denominator);
+      return `${numerator / divisor}/${denominator / divisor}`;
+    }
+  }
+  return null;
+}
+
 function textAnswer(keywords) {
   return { type: "text", keywords };
 }
@@ -412,7 +432,7 @@ function renderProblems() {
       const label = document.createElement("label");
       label.className = "answer-box";
       const saved = state.answers[`${index}-${answerIndex}`] || "";
-      const placeholder = answer.type === "text" ? (currentSubject === "english" ? "写一个完整句子…" : "写清楚你的理由…") : `例如：${answer.unit ? `12${answer.unit}` : "12"}`;
+      const placeholder = answer.type === "text" ? (currentSubject === "english" ? "写一个完整句子…" : "写清楚你的理由…") : `例如：${formatAnswerExample(answer)}`;
       label.innerHTML = `<span>${answerIndex + 1}. ${answer.type === "text" ? "我的回答" : `答案${answer.unit ? `（${answer.unit}）` : ""}`}</span><input class="input-field${activeLesson ? "" : " locked"}" data-problem="${index}" data-answer="${answerIndex}" value="${escapeHtml(saved)}" placeholder="${placeholder}" ${activeLesson ? "" : "disabled"} />`;
       grid.appendChild(label);
     });
