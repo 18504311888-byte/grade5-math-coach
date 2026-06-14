@@ -3,6 +3,7 @@ const STORAGE_KEY = "grade5MathCoach.v2";
 const GAME_KEY = "grade5MathGame.v2";
 const ENG_STORAGE_KEY = "grade5EnglishCoach.v1";
 const ENG_GAME_KEY = "grade5EnglishGame.v1";
+const BACKUP_PREFIX = "grade5LearningBackup.v1.";
 
 // Current subject: 'math' or 'english'
 let currentSubject = (function() {
@@ -60,7 +61,7 @@ let game;
 
 function initState() {
   const defaultTopic = currentSubject === "english" ? "My Day" : "相遇问题";
-  state = load(getStorageKey(), {
+  state = loadWithBackup(getStorageKey(), {
     currentTopic: defaultTopic,
     openUnits: {},
     records: [],
@@ -73,7 +74,7 @@ function initState() {
     session: { active: false, topic: "", startedAt: "" },
     unitIssues: {},
   });
-  game = load(getGameKey(), {
+  game = loadWithBackup(getGameKey(), {
     stars: 0,
     points: 0,
     streak: 0,
@@ -94,9 +95,27 @@ function load(key, fallback) {
   }
 }
 
+function loadWithBackup(key, fallback) {
+  const primary = localStorage.getItem(key);
+  const backup = localStorage.getItem(BACKUP_PREFIX + key);
+  try {
+    const primaryData = primary ? JSON.parse(primary) : null;
+    const backupData = backup ? JSON.parse(backup) : null;
+    const source = primaryData || backupData || {};
+    if (!primaryData && backupData) localStorage.setItem(key, JSON.stringify(backupData));
+    return { ...fallback, ...source };
+  } catch {
+    return { ...fallback };
+  }
+}
+
 function save() {
-  localStorage.setItem(getStorageKey(), JSON.stringify(state));
-  localStorage.setItem(getGameKey(), JSON.stringify(game));
+  const stateText = JSON.stringify(state);
+  const gameText = JSON.stringify(game);
+  localStorage.setItem(getStorageKey(), stateText);
+  localStorage.setItem(getGameKey(), gameText);
+  localStorage.setItem(BACKUP_PREFIX + getStorageKey(), stateText);
+  localStorage.setItem(BACKUP_PREFIX + getGameKey(), gameText);
 }
 
 function $(id) {
