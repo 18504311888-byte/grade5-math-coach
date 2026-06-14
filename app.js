@@ -54,6 +54,8 @@ const game = load(GAME_KEY, {
   lastStudyDate: "",
   badges: [],
   topicAttempts: {},
+  masteredTopics: [],
+  unitBadges: [],
 });
 
 let currentProblems = [];
@@ -420,9 +422,11 @@ function submitAnswers() {
   const correct = results.filter(Boolean).length;
   const score = Math.round((correct / currentProblems.length) * 100);
   const explanationOk = currentProblems.every((_, index) => explainLooksReasonable(state.answers[`think-${index}`] || ""));
-  const mastered = score >= 85 && explanationOk;
+  const readyForMastery = score >= 90 && explanationOk;
   state.topicStatus[state.currentTopic] = {
-    mastered,
+    mastered: false,
+    readyForMastery,
+    variantPassed: false,
     attempts: (state.topicStatus[state.currentTopic]?.attempts || 0) + 1,
     lastScore: score,
     explanationOk,
@@ -438,14 +442,14 @@ function submitAnswers() {
   state.variantRound = 0;
   state.variantPerfectRounds = 0;
   state.variantAnswers = {};
-  state.variants = mastered ? [] : buildVariants(results, true);
-  updateGame(score, mastered);
+  state.variants = buildVariants(results, !readyForMastery);
+  updateGame(score, false);
   renderFeedback(results);
   renderDiagnosis(results);
   renderVariants();
   renderHistory();
   renderCounts();
-  $("topicStatus").textContent = mastered ? "已掌握" : "需巩固";
+  $("topicStatus").textContent = readyForMastery ? "待追练" : "需巩固";
   renderNav();
   save();
 }
@@ -488,8 +492,10 @@ function renderDiagnosis(results = null) {
   const wrongCount = results ? results.filter((ok) => !ok).length : Math.max(0, currentProblems.length - Math.round((status.lastScore / 100) * currentProblems.length));
   $("diagnosisBody").className = "";
   $("diagnosisBody").innerHTML = status.mastered
-    ? `<p><strong>可以进入下一知识点。</strong></p><p>本轮表现稳定，而且每题都写出了等量关系。</p>`
-    : `<p><strong>需要举一反三。</strong></p><p>本轮约有 ${wrongCount} 道题需要复盘。${status.explanationOk ? "答案基本对，但还要继续检查题型变化。" : "还需要写清“谁走了多少、谁和谁相加或相减”。"}</p>`;
+    ? `<p><strong>✅ 真正掌握：可以进入下一知识点。</strong></p><p>你基础题高于90分，追练连续两轮全对，也能讲清方法。</p>`
+    : status.readyForMastery
+      ? `<p><strong>🟡 基础题通过，还要过追练关。</strong></p><p>你基础题达到${status.lastScore}分，也写出了方法。现在需要连续两轮追练全对，才能拿到知识点碎片。</p>`
+      : `<p><strong>🔵 还需要巩固。</strong></p><p>本轮约有 ${wrongCount} 道题需要复盘。${status.explanationOk ? "答案有进步，继续做错题变式。" : "先把方法写清楚，再继续做题。"}</p>`;
 }
 
 function buildVariants(results, focusWrong) {
@@ -652,6 +658,7 @@ function submitVariants() {
     if (state.variantPerfectRounds >= 2) {
       state.variants = [];
       state.variantAnswers = {};
+      completeTopicMastery();
       save();
       setTimeout(() => {
         $("variantBadge").textContent = "完成";
@@ -672,6 +679,22 @@ function submitVariants() {
     setTimeout(() => renderVariants(), 1200);
   }
   save();
+}
+
+function completeTopicMastery() {
+  const status = state.topicStatus[state.currentTopic] || {};
+  status.mastered = true;
+  status.variantPassed = true;
+  status.readyForMastery = true;
+  state.topicStatus[state.currentTopic] = status;
+  if (!game.masteredTopics.includes(state.currentTopic)) game.masteredTopics.push(state.currentTopic);
+  if (!game.badges.includes(state.currentTopic)) game.badges.push(state.currentTopic);
+  const unit = getUnit(state.currentTopic);
+  if (unit && topics.find((item) => item.unit === unit)?.items.every((topic) => game.masteredTopics.includes(topic)) && !game.unitBadges.includes(unit)) {
+    game.unitBadges.push(unit);
+  }
+  $("topicStatus").textContent = "已掌握";
+  renderGame();
 }
 
 function gradeVariant(item, index) {
@@ -700,9 +723,8 @@ function updateGame(score, mastered) {
     game.streak = game.lastStudyDate === yesterday ? game.streak + 1 : 1;
     game.lastStudyDate = today;
   }
-  game.stars += Math.max(1, Math.round(score / 20));
-  game.points += Math.max(4, Math.round(score / 10) + (mastered ? 4 : 0));
-  if (mastered && !game.badges.includes(state.currentTopic)) game.badges.push(state.currentTopic);
+  game.stars += 1 + (score >= 80 ? 2 : 0) + (score >= 90 ? 1 : 0);
+  game.points += 1 + (score >= 80 ? 2 : 0) + (score >= 90 ? 1 : 0);
   game.topicAttempts[state.currentTopic] = (game.topicAttempts[state.currentTopic] || 0) + 1;
 }
 
@@ -719,24 +741,13 @@ function renderGame() {
 }
 
 function renderRewards() {
-  $("shoePoints").textContent = `${game.points}分`;
-  const earned = shoeRewards.filter((reward) => game.points >= reward.points);
-  const next = shoeRewards.find((reward) => game.points < reward.points);
-  if (!next) {
-    $("rewardProgress").innerHTML = `<strong>🏆 已解锁全部球鞋奖励！</strong><span>你已经完成冠军级训练。</span>`;
-  } else {
-    const gap = next.points - game.points;
-    const percent = Math.max(0, Math.min(100, (game.points / next.points) * 100));
-    $("rewardProgress").innerHTML = `<div class="reward-track"><span style="width:${percent}%"></span></div><strong>距离 ${next.name} 还差 ${gap} 分</strong><span>再完成一轮练习就更接近新球鞋。</span>`;
-  }
-  $("rewardWall").innerHTML = shoeRewards.map((reward) => {
-    const unlocked = game.points >= reward.points;
-    const gap = Math.max(0, reward.points - game.points);
-    return `<div class="shoe-card ${unlocked ? "unlocked" : "locked"}">
-      <div class="shoe-art" style="--shoe:${reward.color};--accent:${reward.accent}"><img src="${reward.image}" alt="${escapeHtml(reward.name)}" /><span></span></div>
-      <div><strong>${escapeHtml(reward.name)}</strong><small>${escapeHtml(reward.subtitle)}</small><em>${unlocked ? "已解锁" : `还差${gap}分`}</em></div>
-    </div>`;
-  }).join("");
+  const total = allTopicNames().length;
+  const done = game.masteredTopics.length;
+  const percent = Math.round((done / total) * 100);
+  $("shoePoints").textContent = `${done}/${total}`;
+  $("rewardProgress").innerHTML = `<div class="reward-track"><span style="width:${percent}%"></span></div><strong>球鞋进度：${done}/${total} 个知识点</strong><span>${done === total ? "🏆 全部知识点真正掌握，可以去挑选最终球鞋！" : `还差 ${total - done} 个知识点，最终奖励是一双球鞋。`}</span>`;
+  const units = topics.map((unit) => ({ unit: unit.unit, done: unit.items.filter((topic) => game.masteredTopics.includes(topic)).length, total: unit.items.length }));
+  $("rewardWall").innerHTML = units.map((item) => `<div class="shoe-card ${item.done === item.total ? "unlocked" : "locked"}"><div class="shoe-art"><span>🏀</span></div><div><strong>${escapeHtml(item.unit)}</strong><small>${item.done}/${item.total} 个知识点真正掌握</small><em>${item.done === item.total ? "单元徽章已获得" : `还差${item.total - item.done}个`}</em></div></div>`).join("");
 }
 
 function renderCounts() {

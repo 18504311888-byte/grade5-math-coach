@@ -1246,6 +1246,7 @@ body {
 .shoe-card small { color: var(--muted); font-size: 12px; margin-top: 2px; }
 .shoe-card em { color: var(--court-dark); font-size: 12px; font-style: normal; font-weight: 800; margin-top: 4px; }
 .shoe-art { position: relative; width: 68px; height: 40px; border-radius: 12px 22px 8px 10px; background: var(--shoe); box-shadow: inset 0 -8px 0 rgba(0,0,0,.14), 0 4px 10px rgba(36,17,63,.14); overflow: hidden; }
+.shoe-art span { display: grid; place-items: center; height: 100%; font-size: 26px; }
 .shoe-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .shoe-art::before { content: ""; position: absolute; left: 10px; top: 7px; width: 32px; height: 13px; border: 3px solid var(--accent); border-bottom: 0; border-radius: 12px 14px 0 0; }
 .shoe-art::after { content: ""; position: absolute; right: 6px; bottom: 7px; width: 30px; height: 3px; border-radius: 99px; background: var(--accent); box-shadow: -18px -8px 0 var(--accent), -7px -15px 0 var(--accent); }
