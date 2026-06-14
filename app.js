@@ -517,6 +517,8 @@ function makeVariant(problem, problemIndex, variantIndex) {
 }
 
 function makeGenericVariant(problem, round, index, mode) {
+  const numericVariant = makeSafeNumericVariant(problem, round, index);
+  if (mode === "换情境" && numericVariant) return numericVariant;
   const sceneText = problem.text
     .replace(/小明|小美|小杰|小林|小雪|哥哥|妹妹/g, ["小航", "小雨", "小乐"][index % 3])
     .replace(/苹果|果汁|纸|盒子|书|水/g, ["饼干", "牛奶", "彩纸"][index % 3]);
@@ -536,6 +538,25 @@ function makeGenericVariant(problem, round, index, mode) {
     text: `${sceneText}\n换情境：题目中的人物和物品换了，但数量关系没有变，请重新计算。`,
     answer: problem.answers[0],
   };
+}
+
+function makeSafeNumericVariant(problem, round, index) {
+  const answer = problem.answers[0];
+  if (!answer || answer.type !== "number") return null;
+  const seed = problem.variantSeed || problem.type || "";
+  const delta = round + index + 1;
+  const rules = [
+    [/通分|折纸|剩余|分数|读书|果汁/, () => ({ text: `小乐用一张彩纸的1/${4 + delta}做星星，用1/${6 + delta}做花朵，一共用了这张彩纸的几分之几？`, value: 1 / (4 + delta) + 1 / (6 + delta), unit: "张" })],
+    [/面积|表面积|体积|容积|长方体|正方体|底面积/, () => { const l = 4 + delta, w = 3 + index, h = 2 + round; return { text: `一个长方体盒子长${l}厘米、宽${w}厘米、高${h}厘米。它的体积是多少立方厘米？`, value: l * w * h, unit: "立方厘米" }; }],
+    [/单位|换算|毫升|立方/, () => { const value = 200 + delta * 100; return { text: `${value}毫升等于多少立方厘米？`, value, unit: "立方厘米" }; }],
+    [/平均|统计|条形|折线/, () => { const a = 70 + delta, b = 80 + delta, c = 90 + delta; return { text: `三次数学小测成绩分别是${a}分、${b}分、${c}分，平均多少分？`, value: (a + b + c) / 3, unit: "分" }; }],
+    [/方程|邮票|倍数/, () => { const x = 8 + delta; return { text: `哥哥有${x * 2 + 4}张邮票，比妹妹的2倍多4张。妹妹有多少张邮票？`, value: x, unit: "张" }; }],
+    [/分数乘|分数除|倒数|几分之几/, () => { const total = 24 + delta * 6; return { text: `一根绳子长${total}米，剪去它的1/3，还剩多少米？`, value: total * 2 / 3, unit: "米" }; }],
+  ];
+  const rule = rules.find(([pattern]) => pattern.test(seed));
+  if (!rule) return null;
+  const next = rule[1]();
+  return { text: `${next.text}\n换数字：数量改变了，请重新计算。`, answer: { type: "number", value: next.value, unit: next.unit, tolerance: 0.01 } };
 }
 
 function keywordHints(insight) {
