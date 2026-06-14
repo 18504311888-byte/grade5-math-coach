@@ -734,7 +734,7 @@ function renderGame() {
   const tasks = [
     state.topicStatus[state.currentTopic]?.attempts ? "今日已练" : "完成1次练习",
     state.photos.length ? "已上传作答" : "上传草稿照片",
-    game.badges.includes(state.currentTopic) ? "已拿徽章" : "冲刺85分",
+    game.badges.includes(state.currentTopic) ? "已拿徽章" : "冲刺100分",
   ];
   $("dailyTasks").innerHTML = tasks.map((task) => `<span>${task}</span>`).join("");
   renderRewards();
@@ -745,7 +745,8 @@ function renderRewards() {
   const done = game.masteredTopics.length;
   const percent = Math.round((done / total) * 100);
   $("shoePoints").textContent = `${done}/${total}`;
-  $("rewardProgress").innerHTML = `<div class="reward-track"><span style="width:${percent}%"></span></div><strong>球鞋进度：${done}/${total} 个知识点</strong><span>${done === total ? "🏆 全部知识点真正掌握，可以去挑选最终球鞋！" : `还差 ${total - done} 个知识点，最终奖励是一双球鞋。`}</span>`;
+  const finalShoe = shoeRewards[shoeRewards.length - 1];
+  $("rewardProgress").innerHTML = `<div class="final-shoe-goal"><img src="${finalShoe.image}" alt="${escapeHtml(finalShoe.name)}" /><div><strong>最终球鞋：${escapeHtml(finalShoe.name)}</strong><small>${escapeHtml(finalShoe.subtitle)}</small></div></div><div class="reward-track"><span style="width:${percent}%"></span></div><strong>球鞋进度：${done}/${total} 个知识点</strong><span>${done === total ? "🏆 全部知识点真正掌握，Kobe 6 已解锁！" : `还差 ${total - done} 个知识点，最终奖励是 Kobe 6。`}</span>`;
   const units = topics.map((unit) => ({ unit: unit.unit, done: unit.items.filter((topic) => game.masteredTopics.includes(topic)).length, total: unit.items.length }));
   $("rewardWall").innerHTML = units.map((item) => `<div class="shoe-card ${item.done === item.total ? "unlocked" : "locked"}"><div class="shoe-art"><span>🏀</span></div><div><strong>${escapeHtml(item.unit)}</strong><small>${item.done}/${item.total} 个知识点真正掌握</small><em>${item.done === item.total ? "单元徽章已获得" : `还差${item.total - item.done}个`}</em></div></div>`).join("");
 }

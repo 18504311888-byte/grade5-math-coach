@@ -1270,3 +1270,9 @@ body {
 .ai-question { width: calc(100% - 28px); margin: 0 14px 10px; min-height: 74px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; padding: 10px; color: var(--ink); background: #fbfcfe; }
 .ai-panel .tool-button { margin: 0 14px 12px; }
 .ai-answer { margin: 0 14px 14px; white-space: pre-wrap; line-height: 1.7; }
+
+.final-shoe-goal { display: grid; grid-template-columns: 92px 1fr; gap: 10px; align-items: center; padding-bottom: 10px; }
+.final-shoe-goal img { width: 92px; height: 54px; object-fit: cover; border-radius: 10px; background: #f8f4e8; }
+.final-shoe-goal strong, .final-shoe-goal small { display: block; }
+.final-shoe-goal strong { color: var(--ink); font-size: 15px; }
+.final-shoe-goal small { color: var(--muted); font-size: 12px; margin-top: 3px; }

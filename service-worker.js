@@ -1,5 +1,5 @@
-const CACHE_NAME = "grade5-math-coach-v21";
-const ASSETS = ["./", "./index.html", "./styles.css?v=21", "./problem-bank.js?v=21", "./app.js?v=21", "./manifest.webmanifest", "./app-icon.svg"];
+const CACHE_NAME = "grade5-math-coach-v22";
+const ASSETS = ["./", "./index.html", "./styles.css?v=22", "./problem-bank.js?v=22", "./app.js?v=22", "./manifest.webmanifest", "./app-icon.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
