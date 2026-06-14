@@ -1535,3 +1535,7 @@ body {
 .input-field.locked, .thinking-field.locked { background: #edf1f5; color: #91a0b2; cursor: not-allowed; border-color: #d8e0e8; }
 .lesson-lock-note { grid-column: 1 / -1; padding: 10px 12px; border-radius: 10px; background: #fff7df; color: #8a5a13; font-size: 13px; font-weight: 700; }
 .submit-row button:disabled { opacity: .45; cursor: not-allowed; }
+
+.input-field:focus::placeholder,
+.text-field:focus::placeholder,
+.variant-answer:focus::placeholder { color: transparent; }

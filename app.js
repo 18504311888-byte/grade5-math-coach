@@ -459,7 +459,11 @@ function renderProblems() {
     renderVariants();
     save();
   });
-  list.querySelectorAll("input").forEach((input) => input.addEventListener("input", rememberAnswer));
+  list.querySelectorAll("input").forEach((input) => {
+    input.addEventListener("input", rememberAnswer);
+    input.addEventListener("focus", hidePlaceholderWhileTyping);
+    input.addEventListener("blur", restorePlaceholderAfterTyping);
+  });
   list.querySelectorAll("textarea[data-thinking]").forEach((input) => input.addEventListener("input", rememberThinking));
 }
 
@@ -473,6 +477,17 @@ function rememberAnswer(event) {
   const input = event.currentTarget;
   state.answers[`${input.dataset.problem}-${input.dataset.answer}`] = input.value;
   save();
+}
+
+function hidePlaceholderWhileTyping(event) {
+  const input = event.currentTarget;
+  if (!input.dataset.placeholderText) input.dataset.placeholderText = input.placeholder;
+  input.placeholder = "";
+}
+
+function restorePlaceholderAfterTyping(event) {
+  const input = event.currentTarget;
+  if (!input.value) input.placeholder = input.dataset.placeholderText || "";
 }
 
 function submitAnswers() {
@@ -714,6 +729,10 @@ function renderVariants() {
     state.variantAnswers[event.currentTarget.dataset.variant] = event.currentTarget.value;
     save();
   }));
+  $("variantList").querySelectorAll(".variant-answer").forEach((input) => {
+    input.addEventListener("focus", hidePlaceholderWhileTyping);
+    input.addEventListener("blur", restorePlaceholderAfterTyping);
+  });
   const button = $("submitVariantsBtn");
   if (button) button.addEventListener("click", submitVariants);
 }
