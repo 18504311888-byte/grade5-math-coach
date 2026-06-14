@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>学习管理后台</title>
+  <link rel="stylesheet" href="admin.css?v=1" />
+</head>
+<body>
+  <main class="admin-shell">
+    <header class="admin-header">
+      <div><p>家长管理后台</p><h1>学习情况总览</h1></div>
+      <div class="admin-actions"><a href="index.html" class="back-link">返回学习器</a><button id="exportBtn">导出记录</button></div>
+    </header>
+    <section class="summary-grid" id="summaryGrid"></section>
+    <section class="admin-grid">
+      <article class="admin-card"><div class="card-head"><h2>最近学习记录</h2><span id="recordCount">0条</span></div><div id="recordList" class="record-list"></div></article>
+      <article class="admin-card"><div class="card-head"><h2>知识点掌握情况</h2><span id="masteredSummary">0/0</span></div><div id="topicList" class="topic-list"></div></article>
+      <article class="admin-card"><div class="card-head"><h2>学习数据</h2><span>本地保存</span></div><div id="dataNotes" class="data-notes"></div></article>
+    </section>
+  </main>
+  <script src="admin.js?v=1" defer></script>
+</body>
+</html>
