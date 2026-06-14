@@ -26,6 +26,6 @@ for(const topic of topics){ const problems=app.problemsFor(topic.name); if(!Arra
    app.save(); if(storage.dump('grade5MathCoach.v2').currentTopic!==topic.name){ failures.push(`${topic.name} ${level.id}学生${students}: localStorage未保存`); topicStudentFailures++; }
  } }
  rows.push({unit:topic.unit,name:topic.name,count:problems.length,failures:topicStudentFailures,rounds:topicRounds});
- if(topic.name!=='相遇问题') warnings.push(`${topic.name}: 追练题没有真正换数字，仍然使用原题答案，只追加提示文字。`);
+ const probe=problems[0]; app.state.currentTopic=topic.name; app.state.variantRound=0; const generated=app.setCurrentProblems(problems) || app.buildVariants([false, ...problems.slice(1).map(()=>true)], true)[0]; if(generated && generated.text === probe.text) warnings.push(`${topic.name}: 首轮追练题题干与原题完全相同。`);
 }
 console.log(`平台菜单知识点: ${topics.length}`); console.log(`模拟学生总数: ${students}`); console.log(`基础题总量: ${rows.reduce((n,r)=>n+r.count,0)}`); console.log(`追练轮次: ${rows.reduce((n,r)=>n+r.rounds,0)}`); console.log(`失败数: ${failures.length}`); console.log(`质量警告数: ${warnings.length}`); console.log('\n知识点覆盖:'); rows.forEach((r)=>console.log(`- ${r.unit} / ${r.name}: ${r.count}题, 追练轮${r.rounds}, 失败${r.failures}`)); if(failures.length){ console.log('\n失败:'); failures.slice(0,40).forEach((x)=>console.log(`- ${x}`)); } console.log('\n质量警告:'); warnings.slice(0,10).forEach((x)=>console.log(`- ${x}`)); if(warnings.length>10) console.log(`- 还有 ${warnings.length-10} 条同类警告`); if(failures.length) process.exitCode=1;

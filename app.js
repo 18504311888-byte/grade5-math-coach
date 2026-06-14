@@ -10,14 +10,14 @@ const shoeRewards = [
 ];
 
 const topics = [
-  { unit: "分数加减法", items: ["折纸：异分母分数加减法", "星期日的安排", "分数王国与小数王国", "练习一"] },
-  { unit: "长方体（一）", items: ["长方体的认识", "展开与折叠", "长方体的表面积", "露在外面的面", "练习二"] },
-  { unit: "分数乘法", items: ["分数乘整数", "分数乘分数", "倒数", "分数乘法应用题", "练习三"] },
-  { unit: "长方体（二）", items: ["体积与容积", "体积单位", "长方体的体积", "体积单位的换算", "有趣的测量", "练习四"] },
+  { unit: "分数加减法", items: ["折纸：异分母分数加减法", "通分后进行分数加减", "星期日的安排：分数加减混合运算", "分数和小数互化", "分数、小数大小比较"] },
+  { unit: "长方体（一）", items: ["长方体的认识", "正方体的认识", "展开与折叠", "长方体和正方体表面积", "露在外面的面"] },
+  { unit: "分数乘法", items: ["分数乘整数", "求一个数的几分之几是多少", "分数乘分数", "分数乘法应用题", "倒数"] },
+  { unit: "长方体（二）", items: ["体积与容积", "体积单位和容积单位", "长方体体积", "正方体体积", "底面积乘高", "体积单位换算", "有趣的测量：不规则物体体积"] },
   { unit: "分数除法", items: ["分数除以整数", "一个数除以分数", "分数除以分数", "已知一个数的几分之几是多少，求这个数", "分数除法应用题"] },
   { unit: "确定位置", items: ["用方向和距离确定位置", "根据描述找位置", "根据图描述位置", "路线描述"] },
   { unit: "用方程解决问题", items: ["邮票的张数", "列方程解决倍数关系", "相遇问题", "方程应用题综合"] },
-  { unit: "数学好玩", items: ['"象征性"长跑', "有趣的折叠", "包装的学问"] },
+  { unit: "数学好玩", items: ["“象征性”长跑", "有趣的折叠", "包装的学问"] },
   { unit: "数据的表示和分析", items: ["复式条形统计图", "复式折线统计图", "平均数的再认识"] },
 ];
 
@@ -44,6 +44,7 @@ const state = load(STORAGE_KEY, {
   variants: [],
   variantAnswers: {},
   variantRound: 0,
+  variantPerfectRounds: 0,
 });
 
 const game = load(GAME_KEY, {
@@ -250,6 +251,23 @@ const templates = {
 
 function problemsFor(topicName) {
   if (topicName === "相遇问题") return meetingProblems().slice(0, 5);
+  const aliases = {
+    "通分后进行分数加减": "折纸：异分母分数加减法",
+    "星期日的安排：分数加减混合运算": "星期日的安排",
+    "分数和小数互化": "分数王国与小数王国",
+    "分数、小数大小比较": "分数王国与小数王国",
+    "正方体的认识": "长方体的认识",
+    "长方体和正方体表面积": "长方体的表面积",
+    "求一个数的几分之几是多少": "分数乘法应用题",
+    "体积单位和容积单位": "体积单位",
+    "长方体体积": "长方体的体积",
+    "正方体体积": "长方体的体积",
+    "底面积乘高": "长方体的体积",
+    "体积单位换算": "体积单位的换算",
+    "有趣的测量：不规则物体体积": "有趣的测量",
+    "“象征性”长跑": '"象征性"长跑',
+  };
+  if (aliases[topicName] && window.problemBank?.[aliases[topicName]]) return window.problemBank[aliases[topicName]];
   if (window.problemBank?.[topicName]) return window.problemBank[topicName];
   const unit = getUnit(topicName);
   if (unit === "分数加减法") return templates.fractionAdd(topicName);
@@ -372,6 +390,7 @@ function renderProblems() {
   $("submitBtn").addEventListener("click", submitAnswers);
   $("variantBtn").addEventListener("click", () => {
     state.variantRound = 0;
+    state.variantPerfectRounds = 0;
     state.variantAnswers = {};
     state.variants = buildVariants(currentProblems.map(() => true), false);
     renderVariants();
@@ -417,8 +436,9 @@ function submitAnswers() {
   });
   state.records = state.records.slice(0, 20);
   state.variantRound = 0;
+  state.variantPerfectRounds = 0;
   state.variantAnswers = {};
-  state.variants = buildVariants(results, !mastered);
+  state.variants = mastered ? [] : buildVariants(results, true);
   updateGame(score, mastered);
   renderFeedback(results);
   renderDiagnosis(results);
@@ -432,7 +452,7 @@ function submitAnswers() {
 
 function explainLooksReasonable(raw) {
   const text = String(raw || "").trim();
-  return text.length >= 10 && /(相加|相减|速度和|速度差|路程|时间|相向|追上|追及|相背)/.test(text);
+  return text.length >= 10 && /(相加|相减|相乘|相除|通分|单位|路程|时间|速度|体积|面积|表面积|容积|方向|方程|平均数|折线|条形|分子|分母|倒数|比例|剩余|总量)/.test(text);
 }
 
 function gradeProblem(problem, index) {
@@ -486,16 +506,42 @@ function makeVariant(problem, problemIndex, variantIndex) {
   if (state.currentTopic === "相遇问题") {
     return makeMeetingVariant(problem.variantSeed, round, variantIndex);
   }
-  const answer = problem.answers[0];
-  const number = answer.type === "number" ? answer.value : null;
-  const extra = number !== null ? `原题答案附近再换一个数字，正确结果应接近${number}。` : `先说清${problem.type}的关键关系，再写答案。`;
+  const mode = ["换情境", "换问法", "易错辨析"][(round - 1) % 3];
+  const variant = makeGenericVariant(problem, round, variantIndex, mode);
   return {
-    title: `第${round}轮追练：${problem.type}`,
-    text: `${problem.text}
-追练要求：${extra}`,
-    answer,
+    ...variant,
+    title: `第${round}轮追练：${problem.type}·${mode}`,
     hint: problem.insight,
+    sourceProblem: problem,
   };
+}
+
+function makeGenericVariant(problem, round, index, mode) {
+  const sceneText = problem.text
+    .replace(/小明|小美|小杰|小林|小雪|哥哥|妹妹/g, ["小航", "小雨", "小乐"][index % 3])
+    .replace(/苹果|果汁|纸|盒子|书|水/g, ["饼干", "牛奶", "彩纸"][index % 3]);
+  if (mode === "换问法") {
+    return {
+      text: `${sceneText}\n换问法：先不要计算，写出解决这道题最关键的数量关系或方法。`,
+      answer: { type: "text", keywords: keywordHints(problem.insight) },
+    };
+  }
+  if (mode === "易错辨析") {
+    return {
+      text: `${sceneText}\n易错辨析：这道题最容易把什么弄错？请写一个关键词。`,
+      answer: { type: "text", keywords: keywordHints(problem.insight) },
+    };
+  }
+  return {
+    text: `${sceneText}\n换情境：题目中的人物和物品换了，但数量关系没有变，请重新计算。`,
+    answer: problem.answers[0],
+  };
+}
+
+function keywordHints(insight) {
+  const words = ["通分", "单位", "相加", "相减", "相乘", "相除", "体积", "面积", "表面积", "容积", "方向", "方程", "平均数", "折线", "条形", "倒数", "速度和", "速度差", "剩余", "比较", "换算"];
+  const matched = words.filter((word) => insight.includes(word));
+  return matched.length ? matched : [insight.slice(0, 3)];
 }
 
 function makeMeetingVariant(seed, round, index) {
@@ -561,7 +607,7 @@ function renderVariants() {
     ? state.variants.map((item, index) => {
         const saved = state.variantAnswers[index] || "";
         return `<div class="variant-item"><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.text)}</p><input class="variant-answer" data-variant="${index}" value="${escapeHtml(saved)}" placeholder="写答案或说明理由" /><div class="variant-feedback" id="variantFeedback${index}"></div></div>`;
-      }).join("") + `<div class="variant-note">错题会继续生成下一轮追练，直到本轮全部答对。</div><div class="variant-actions"><button class="tool-button" type="button" id="submitVariantsBtn">提交追练</button></div>`
+      }).join("") + `<div class="variant-note">连续两轮追练都答对，就可以进入下一个知识点。</div><div class="variant-actions"><button class="tool-button" type="button" id="submitVariantsBtn">提交追练</button></div>`
     : `<div class="empty-state">提交后会根据结果生成追练题。</div>`;
   $("variantList").querySelectorAll(".variant-answer").forEach((input) => input.addEventListener("input", (event) => {
     state.variantAnswers[event.currentTarget.dataset.variant] = event.currentTarget.value;
@@ -581,11 +627,23 @@ function submitVariants() {
     feedback.textContent = results[index] ? `答对了。${item.hint}` : `还需要再练。提示：${item.hint}`;
   });
   if (wrong === 0) {
+    state.variantPerfectRounds = (state.variantPerfectRounds || 0) + 1;
+    if (state.variantPerfectRounds >= 2) {
+      state.variants = [];
+      state.variantAnswers = {};
+      save();
+      setTimeout(() => {
+        $("variantBadge").textContent = "完成";
+        $("variantList").innerHTML = `<div class="empty-state">连续两轮追练都答对了，已掌握，可以进入下一个知识点。</div>`;
+      }, 900);
+      return;
+    }
     state.variantRound += 1;
     state.variantAnswers = {};
     state.variants = state.variants.map((item, index) => makeFollowUpVariant(item, index));
     setTimeout(() => renderVariants(), 900);
   } else {
+    state.variantPerfectRounds = 0;
     const next = state.variants.filter((_, index) => !results[index]);
     state.variantRound += 1;
     state.variantAnswers = {};
@@ -611,10 +669,7 @@ function makeFollowUpVariant(item, index) {
   if (state.currentTopic === "相遇问题") {
     return makeMeetingVariant(item.variantSeed || "同时相向", state.variantRound + 1, index);
   }
-  return {
-    ...item,
-    title: `第${state.variantRound + 1}轮追练：${item.title.replace(/^第\d+轮追练：/, "")}`,
-  };
+  return makeVariant(item.sourceProblem || item, index, index);
 }
 
 function updateGame(score, mastered) {
@@ -713,6 +768,7 @@ function resetTopic() {
   state.variants = [];
   state.variantAnswers = {};
   state.variantRound = 0;
+  state.variantPerfectRounds = 0;
   renderLesson();
   save();
 }

@@ -277,6 +277,7 @@ function buildVariants(currentProblems, results, variantRound, isMeeting, focusW
 // ════════════════════════════════════════════════════════════
 
 const MAX_VARIANT_ROUNDS = 8;   // 防止死循环的上限
+const PERFECT_ROUND_LIMIT = 2;
 const TOPICS = ['相遇问题', '用方程解决问题'];
 
 /**
@@ -455,6 +456,7 @@ function simulateStudent(studentId, levelDef, topicName, rng) {
 
   // --- 阶段 3：追练题循环 ---
   let totalVariantRounds = 0;
+  let perfectRounds = 0;
   let totalVariantCorrect = 0;
   let totalVariantAttempted = 0;
   while (state.variants.length > 0 && totalVariantRounds < MAX_VARIANT_ROUNDS) {
@@ -505,11 +507,16 @@ function simulateStudent(studentId, levelDef, topicName, rng) {
     state.variantAnswers = {};
 
     if (roundWrong === 0) {
-      // 全部答对 → 仍然生成下一轮（全部变式）
-      state.variants = currentVariants.map((item, idx) =>
-        makeFollowUpVariant(item, state.variantRound, isMeeting),
-      );
+      perfectRounds += 1;
+      if (perfectRounds >= PERFECT_ROUND_LIMIT) {
+        state.variants = [];
+      } else {
+        state.variants = currentVariants.map((item, idx) =>
+          makeFollowUpVariant(item, state.variantRound, isMeeting),
+        );
+      }
     } else {
+      perfectRounds = 0;
       // 存在错误 → 只将错题生成下一轮
       const wrongItems = currentVariants.filter((_, idx) => !variantResults[idx]);
       state.variants = wrongItems.map((item, idx) =>
@@ -517,10 +524,7 @@ function simulateStudent(studentId, levelDef, topicName, rng) {
       );
     }
 
-    // 断言：如果上轮全对但本轮的 variants 不为空，检查是否生成了新题
-    if (roundWrong === 0 && state.variants.length === 0) {
-      fail(`全部答对后下一轮追练题意外为空（第${totalVariantRounds}轮后）`);
-    }
+    // 连续两轮全对后允许追练结束。
 
     // 断言：followUp variant 不能为空字段
     state.variants.forEach((v, vi) => {
@@ -764,7 +768,7 @@ function main() {
 
   if (totalAssertFailures === 0) {
     console.log(`\n  ✅ 全部测试通过。30 名学生模拟完成，${MAX_VARIANT_ROUNDS} 轮追练上限内无断言失败。`);
-    console.log(`     答对后继续生成追练题的行为已确认（${hitMaxCount} 名学生达到轮数上限）。`);
+    console.log(`     连续两轮追练全对后结束的行为已确认。`);
     console.log(`     不同水平学生的正确率差异符合预期。\n`);
     process.exit(0);
   } else {
