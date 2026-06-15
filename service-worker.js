@@ -1,5 +1,5 @@
-const CACHE_NAME = "grade5-learning-coach-v8";
-const ASSETS = ["./", "./index.html", "./styles.css?v=29", "./problem-bank.js?v=29", "./english-bank.js?v=29", "./app.js?v=29", "./manifest.webmanifest", "./app-icon.svg", "./admin.html", "./admin.css?v=1", "./admin.js?v=1"];
+const CACHE_NAME = "grade5-learning-coach-v10";
+const ASSETS = ["./", "./index.html", "./styles.css?v=31", "./problem-bank.js?v=31", "./english-bank.js?v=31", "./app.js?v=31", "./manifest.webmanifest", "./app-icon.svg", "./admin.html", "./admin.css?v=1", "./admin.js?v=1"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
@@ -19,7 +19,9 @@ self.addEventListener("fetch", (event) => {
     fetch(event.request)
       .then((response) => {
         const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        if (new URL(event.request.url).origin === self.location.origin) {
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        }
         return response;
       })
       .catch(() => caches.match(event.request)),

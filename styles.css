@@ -1539,3 +1539,23 @@ body {
 .input-field:focus::placeholder,
 .text-field:focus::placeholder,
 .variant-answer:focus::placeholder { color: transparent; }
+
+/* 恢复原版展示风格：学科切换只做轻量入口，不改变整体布局 */
+.subject-bar { position: static; z-index: auto; display: flex; justify-content: flex-start; gap: 4px; background: transparent; backdrop-filter: none; border: 0; padding: 0; }
+.app-shell { padding-top: 0; }
+.subject-tab { min-height: 34px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--muted); padding: 5px 10px; font-size: 13px; }
+.subject-tab:hover { background: var(--blue-soft); color: var(--blue); }
+.subject-tab.active { border-color: var(--court); background: #fff8eb; color: var(--court-dark); }
+.subject-tab.active[data-subject="english"] { border-color: var(--court); background: #fff8eb; color: var(--court-dark); }
+.subject-icon { font-size: 14px; }
+.english-theme .game-bar { background: linear-gradient(135deg, #123b6d 0%, #184d88 60%, #10233f 100%) !important; border-color: #123b6d !important; }
+.english-theme .game-encourage-text { color: #fdb927 !important; }
+.english-theme .problem-card { border-left-color: var(--court) !important; }
+.english-theme .rule-line { border-left-color: var(--court) !important; background: linear-gradient(90deg, #fff8eb, #fff) !important; }
+.english-theme .tool-button { border-color: var(--court) !important; background: var(--court) !important; color: #fff !important; }
+.english-theme .tool-button.secondary { background: #fff !important; color: var(--court-dark) !important; border-color: #f2d7aa !important; }
+.english-theme .status-pill { background: #fff0db !important; color: var(--court-dark) !important; }
+.english-theme .topbar { border-bottom-color: rgba(242, 140, 40, .45) !important; }
+.english-theme .eyebrow { color: var(--blue) !important; }
+.english-theme .variant-item { background: #fffaf0 !important; border-color: #f2d7aa !important; border-left-color: var(--court) !important; }
+.english-theme .problem-index { background: #fff0db !important; color: var(--court-dark) !important; }
