@@ -31,10 +31,10 @@ const badmintonRewards = [
 ];
 
 const topics = [
-  { unit: "分数加减法", items: ["折纸：异分母分数加减法", "星期日的安排", "分数王国与小数王国", "练习一"] },
-  { unit: "长方体（一）", items: ["长方体的认识", "展开与折叠", "长方体的表面积", "露在外面的面", "练习二"] },
-  { unit: "分数乘法", items: ["分数乘整数", "分数乘分数", "倒数", "分数乘法应用题", "练习三"] },
-  { unit: "长方体（二）", items: ["体积与容积", "体积单位", "长方体的体积", "体积单位的换算", "有趣的测量", "练习四"] },
+  { unit: "分数加减法", items: ["折纸：异分母分数加减法", "通分后进行分数加减", "星期日的安排：分数加减混合运算", "分数和小数互化", "分数、小数大小比较"] },
+  { unit: "长方体（一）", items: ["长方体的认识", "正方体的认识", "展开与折叠", "长方体和正方体表面积", "露在外面的面"] },
+  { unit: "分数乘法", items: ["分数乘整数", "求一个数的几分之几是多少", "分数乘分数", "分数乘法应用题", "倒数"] },
+  { unit: "长方体（二）", items: ["体积与容积", "体积单位和容积单位", "长方体体积", "正方体体积", "底面积乘高", "体积单位换算", "有趣的测量：不规则物体体积"] },
   { unit: "分数除法", items: ["分数除以整数", "一个数除以分数", "分数除以分数", "已知一个数的几分之几是多少，求这个数", "分数除法应用题"] },
   { unit: "确定位置", items: ["用方向和距离确定位置", "根据描述找位置", "根据图描述位置", "路线描述"] },
   { unit: "用方程解决问题", items: ["邮票的张数", "列方程解决倍数关系", "相遇问题", "方程应用题综合"] },
@@ -60,7 +60,7 @@ let state;
 let game;
 
 function initState() {
-  const defaultTopic = currentSubject === "english" ? "My Day" : "相遇问题";
+  const defaultTopic = currentSubject === "english" ? "Module 1 Unit 1 — She was a driver before." : "相遇问题";
   state = loadWithBackup(getStorageKey(), {
     currentTopic: defaultTopic,
     openUnits: {},
@@ -71,6 +71,7 @@ function initState() {
     variants: [],
     variantAnswers: {},
     variantRound: 0,
+    variantPasses: 0,
     session: { active: false, topic: "", startedAt: "" },
     unitIssues: {},
   });
@@ -81,6 +82,9 @@ function initState() {
     lastStudyDate: "",
     badges: [],
     topicAttempts: {},
+    dailyBonusDate: "",
+    dailyBonusClaimed: false,
+    milestones: [],
   });
 }
 initState();
@@ -142,26 +146,6 @@ function getUnit(topicName) {
 
 function numberAnswer(value, unit = "", tolerance = 0.01) {
   return { type: "number", value, unit, tolerance };
-}
-
-function formatAnswerExample(answer) {
-  if (!answer.unit && Number.isInteger(answer.value)) return String(answer.value);
-  if (Number.isInteger(answer.value)) return `${answer.value}${answer.unit || ""}`;
-  const fraction = toSimpleFraction(answer.value);
-  if (fraction) return `${fraction}${answer.unit || ""}`;
-  return `${Number(answer.value.toFixed(2))}${answer.unit || ""}`;
-}
-
-function toSimpleFraction(value) {
-  for (let denominator = 2; denominator <= 100; denominator += 1) {
-    const numerator = Math.round(value * denominator);
-    if (Math.abs(numerator / denominator - value) < 0.0001) {
-      const gcd = (a, b) => b ? gcd(b, a % b) : a;
-      const divisor = gcd(Math.abs(numerator), denominator);
-      return `${numerator / divisor}/${denominator / divisor}`;
-    }
-  }
-  return null;
 }
 
 function textAnswer(keywords) {
@@ -387,6 +371,7 @@ function selectTopic(topicName) {
   state.variants = [];
   state.variantAnswers = {};
   state.variantRound = 0;
+  state.variantPasses = 0;
   state.session = { active: false, topic: topicName, startedAt: "" };
   state.unitIssues = {};
   renderLesson();
@@ -451,7 +436,8 @@ function renderProblems() {
       const label = document.createElement("label");
       label.className = "answer-box";
       const saved = state.answers[`${index}-${answerIndex}`] || "";
-      label.innerHTML = `<span>${answerIndex + 1}. ${answer.type === "text" ? "我的回答" : `答案${answer.unit ? `（${answer.unit}）` : ""}`}</span><input class="input-field${activeLesson ? "" : " locked"}" data-problem="${index}" data-answer="${answerIndex}" value="${escapeHtml(saved)}" ${activeLesson ? "" : "disabled"} />`;
+      const placeholder = answer.type === "text" ? (currentSubject === "english" ? "写一个完整句子…" : "写清楚你的理由…") : `例如：${answer.unit || "12"}`;
+      label.innerHTML = `<span>${answerIndex + 1}. ${answer.type === "text" ? "我的回答" : `答案${answer.unit ? `（${answer.unit}）` : ""}`}</span><input class="input-field${activeLesson ? "" : " locked"}" data-problem="${index}" data-answer="${answerIndex}" value="${escapeHtml(saved)}" placeholder="${placeholder}" ${answer.type === "text" ? "" : 'inputmode="decimal"'} ${activeLesson ? "" : "disabled"} />`;
       grid.appendChild(label);
     });
     area.appendChild(grid);
@@ -459,7 +445,7 @@ function renderProblems() {
       const thinking = document.createElement("label");
       thinking.className = "thinking-label";
       const savedThinking = state.answers[`think-${index}`] || "";
-      thinking.innerHTML = `<span>我这样想：谁走了多少？为什么要相加或相减？</span><textarea class="text-field thinking-field${activeLesson ? "" : " locked"}" data-thinking="${index}" ${activeLesson ? "" : "disabled"}>${escapeHtml(savedThinking)}</textarea>`;
+      thinking.innerHTML = `<span>我这样想：谁走了多少？为什么要相加或相减？</span><textarea class="text-field thinking-field${activeLesson ? "" : " locked"}" data-thinking="${index}" placeholder="例如：两个人相向而行，所以要把两个人每分钟走的路程相加。" ${activeLesson ? "" : "disabled"}>${escapeHtml(savedThinking)}</textarea>`;
       area.appendChild(thinking);
     }
     list.appendChild(node);
@@ -467,7 +453,7 @@ function renderProblems() {
 
   const row = document.createElement("div");
   row.className = "submit-row";
-  row.innerHTML = `<div class="lesson-lock-note">${activeLesson ? "本轮学习已开始，答案会自动保存。" : "请先点击上方“开始”，再写答案。"}</div><button class="tool-button" type="button" id="submitBtn" ${activeLesson ? "" : "disabled"}>提交诊断</button><button class="tool-button secondary" type="button" id="variantBtn" ${activeLesson ? "" : "disabled"}>生成变式</button>`;
+  row.innerHTML = `<button class="tool-button" type="button" id="submitBtn" ${activeLesson ? "" : "disabled"}>提交诊断</button><button class="tool-button secondary" type="button" id="variantBtn" ${activeLesson ? "" : "disabled"}>生成变式</button>`;
   list.appendChild(row);
   $("submitBtn").addEventListener("click", submitAnswers);
   $("variantBtn").addEventListener("click", () => {
@@ -477,9 +463,7 @@ function renderProblems() {
     renderVariants();
     save();
   });
-  list.querySelectorAll("input").forEach((input) => {
-    input.addEventListener("input", rememberAnswer);
-  });
+  list.querySelectorAll("input").forEach((input) => input.addEventListener("input", rememberAnswer));
   list.querySelectorAll("textarea[data-thinking]").forEach((input) => input.addEventListener("input", rememberThinking));
 }
 
@@ -496,8 +480,7 @@ function rememberAnswer(event) {
 }
 
 function submitAnswers() {
-  if (!state.session?.active || state.session.topic !== state.currentTopic) return;
-  state.unitIssues = {};
+  if (!(state.session?.active && state.session.topic === state.currentTopic)) return;
   document.querySelectorAll(".answer-area input").forEach((input) => {
     state.answers[`${input.dataset.problem}-${input.dataset.answer}`] = input.value;
   });
@@ -518,33 +501,35 @@ function submitAnswers() {
   } else {
     explanationOk = currentProblems.every(function(_, index) { return explainLooksReasonable(state.answers["think-" + index] || ""); });
   }
-  const mastered = score >= 85 && explanationOk;
+  const previous = state.topicStatus[state.currentTopic] || {};
+  const readyForVariant = score >= 90 && explanationOk && Object.keys(state.unitIssues || {}).length === 0;
+  const mastered = Boolean(previous.mastered || (readyForVariant && state.variantPasses >= 2));
   state.topicStatus[state.currentTopic] = {
     mastered,
     attempts: (state.topicStatus[state.currentTopic]?.attempts || 0) + 1,
     lastScore: score,
     explanationOk,
+    readyForVariant,
+    variantPasses: state.variantPasses || 0,
   };
   state.records.unshift({
     topic: state.currentTopic,
     score,
     correct,
     total: currentProblems.length,
-    startedAt: state.session.startedAt,
-    durationMinutes: Math.max(1, Math.round((Date.now() - new Date(state.session.startedAt).getTime()) / 60000)),
     time: new Date().toLocaleString("zh-CN"),
   });
   state.records = state.records.slice(0, 20);
   state.variantRound = 0;
   state.variantAnswers = {};
-  state.variants = buildVariants(results, !mastered);
-  updateGame(score, mastered);
+  state.variants = buildVariants(results, !readyForVariant);
+  updateGame(score, mastered, readyForVariant);
   renderFeedback(results);
   renderDiagnosis(results);
   renderVariants();
   renderHistory();
   renderCounts();
-  $("topicStatus").textContent = mastered ? "已掌握" : "需巩固";
+  $("topicStatus").textContent = mastered ? "已掌握" : readyForVariant ? "追练中" : "需巩固";
   renderNav();
   save();
 }
@@ -594,7 +579,7 @@ function renderFeedback(results) {
     var label = currentSubject === "english" ? "Good job! " : "答对了。";
     var retryLabel = currentSubject === "english" ? "Try again. Hint: " : "再想想。提示：";
     feedback.className = `problem-feedback show ${results[index] ? "ok" : "bad"}`;
-    const unitIssue = Object.values(state.unitIssues || {}).find((text) => text);
+    const unitIssue = state.unitIssues?.[`${index}-0`] || Object.values(state.unitIssues || {})[0];
     feedback.textContent = results[index] ? label + currentProblems[index].insight : unitIssue || retryLabel + currentProblems[index].insight;
   });
 }
@@ -727,7 +712,7 @@ function renderVariants() {
   $("variantList").innerHTML = state.variants.length
     ? state.variants.map((item, index) => {
         const saved = state.variantAnswers[index] || "";
-        return `<div class="variant-item"><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.text)}</p><input class="variant-answer" data-variant="${index}" value="${escapeHtml(saved)}" /><div class="variant-feedback" id="variantFeedback${index}"></div></div>`;
+        return `<div class="variant-item"><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.text)}</p><input class="variant-answer" data-variant="${index}" value="${escapeHtml(saved)}" placeholder="写答案或说明理由" /><div class="variant-feedback" id="variantFeedback${index}"></div></div>`;
       }).join("") + `<div class="variant-note">错题会继续生成下一轮追练，直到本轮全部答对。</div><div class="variant-actions"><button class="tool-button" type="button" id="submitVariantsBtn">提交追练</button></div>`
     : `<div class="empty-state">提交后会根据结果生成追练题。</div>`;
   $("variantList").querySelectorAll(".variant-answer").forEach((input) => input.addEventListener("input", (event) => {
@@ -751,10 +736,24 @@ function submitVariants() {
   });
   if (wrong === 0) {
     state.variantRound += 1;
+    state.variantPasses = (state.variantPasses || 0) + 1;
     state.variantAnswers = {};
-    state.variants = state.variants.map(function(item, index) { return makeFollowUpVariant(item, index); });
-    setTimeout(function() { renderVariants(); }, 900);
+    if (state.variantPasses >= 2) {
+      const status = state.topicStatus[state.currentTopic] || {};
+      status.mastered = true;
+      status.variantPasses = state.variantPasses;
+      state.topicStatus[state.currentTopic] = status;
+      updateGame(status.lastScore || 90, true, true);
+      $("topicStatus").textContent = "已掌握";
+      $("diagnosisBody").innerHTML = `<p><strong>已掌握，可以进入下一个知识点！</strong></p><p>你已经连续两轮追练全对，说明不只是会做原题，也能处理变化题。</p>`;
+      state.variants = [];
+      setTimeout(function() { renderVariants(); renderNav(); renderCounts(); renderGame(); save(); }, 900);
+    } else {
+      state.variants = state.variants.map(function(item, index) { return makeFollowUpVariant(item, index); });
+      setTimeout(function() { renderVariants(); }, 900);
+    }
   } else {
+    state.variantPasses = 0;
     const next = state.variants.filter(function(_, index) { return !results[index]; });
     state.variantRound += 1;
     state.variantAnswers = {};
@@ -772,6 +771,10 @@ function gradeVariant(item, index) {
   }
   if (answer.type === "text") return answer.keywords.some(function(word) { return raw.includes(word); });
   const value = Number(raw.replace(/[^0-9./-]/g, ""));
+  const numericCorrect = raw.includes("/") && !raw.includes(".")
+    ? (() => { const [a, b] = raw.split("/").map(Number); return b && Math.abs(a / b - answer.value) <= answer.tolerance; })()
+    : Number.isFinite(value) && Math.abs(value - answer.value) <= answer.tolerance;
+  if (numericCorrect && answer.unit && !raw.includes(answer.unit)) return false;
   if (raw.includes("/") && !raw.includes(".")) {
     const [a, b] = raw.split("/").map(Number);
     return b && Math.abs(a / b - answer.value) <= answer.tolerance;
@@ -795,16 +798,29 @@ function makeFollowUpVariant(item, index) {
   };
 }
 
-function updateGame(score, mastered) {
+function updateGame(score, mastered, readyForVariant) {
   const today = todayKey();
   if (game.lastStudyDate !== today) {
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
     game.streak = game.lastStudyDate === yesterday ? game.streak + 1 : 1;
     game.lastStudyDate = today;
   }
-  game.stars += Math.max(1, Math.round(score / 20));
-  game.points += Math.max(4, Math.round(score / 10) + (mastered ? 4 : 0));
+  const starGain = mastered ? 3 : readyForVariant ? 2 : score >= 70 ? 1 : 0;
+  const basePoints = mastered ? 10 : readyForVariant ? 2 : 0;
+  game.stars += starGain;
+  game.points += basePoints;
+  if (game.dailyBonusDate !== today) {
+    game.dailyBonusDate = today;
+    game.dailyBonusClaimed = false;
+  }
+  if (!game.dailyBonusClaimed) {
+    game.points += 3;
+    game.dailyBonusClaimed = true;
+  }
   if (mastered && !game.badges.includes(state.currentTopic)) game.badges.push(state.currentTopic);
+  [20, 50, 100, 180, 300].forEach(function(points) {
+    if (game.points >= points && !game.milestones.includes(points)) game.milestones.push(points);
+  });
   game.topicAttempts[state.currentTopic] = (game.topicAttempts[state.currentTopic] || 0) + 1;
 }
 
@@ -815,13 +831,15 @@ function renderGame() {
   if (currentSubject === "english") {
     tasks = [
       state.topicStatus[state.currentTopic]?.attempts ? "今日已练" : "完成1次练习",
-      game.badges.includes(state.currentTopic) ? "已拿徽章" : "冲刺85分",
+      game.dailyBonusClaimed ? "每日+3分已获得" : "完成今日任务+3分",
+      game.badges.includes(state.currentTopic) ? "已拿徽章" : "冲刺100分",
     ];
   } else {
     tasks = [
       state.topicStatus[state.currentTopic]?.attempts ? "今日已练" : "完成1次练习",
       state.photos.length ? "已上传作答" : "上传草稿照片",
-      game.badges.includes(state.currentTopic) ? "已拿徽章" : "冲刺85分",
+      game.dailyBonusClaimed ? "每日+3分已获得" : "完成今日任务+3分",
+      game.badges.includes(state.currentTopic) ? "已拿徽章" : "冲刺100分",
     ];
   }
   $("dailyTasks").innerHTML = tasks.map(function(task) { return "<span>" + task + "</span>"; }).join("");
@@ -839,21 +857,22 @@ function renderRewards() {
 function renderShoeRewards() {
   var shoeEl = $("shoePoints");
   if (shoeEl) shoeEl.textContent = game.points + "分";
-  const earned = shoeRewards.filter(function(reward) { return game.points >= reward.points; });
+  const mathTopics = allTopicNames();
+  const masteredCount = mathTopics.filter(function(topic) { return state.topicStatus[topic]?.mastered; }).length;
+  const complete = mathTopics.length > 0 && masteredCount === mathTopics.length;
   const next = shoeRewards.find(function(reward) { return game.points < reward.points; });
-  if (!next) {
-    $("rewardProgress").innerHTML = "<strong>🏆 已解锁全部球鞋奖励！</strong><span>你已经完成冠军级训练。</span>";
+  if (complete) {
+    $("rewardProgress").innerHTML = "<strong>🏆 Kobe 6 已解锁！</strong><span>所有数学知识点都通过严格掌握检查。</span>";
   } else {
-    const gap = next.points - game.points;
-    const percent = Math.max(0, Math.min(100, (game.points / next.points) * 100));
-    $("rewardProgress").innerHTML = `<div class="reward-track"><span style="width:${percent}%"></span></div><strong>距离 ${next.name} 还差 ${gap} 分</strong><span>再完成一轮练习就更接近新球鞋。</span>`;
+    const percent = Math.round((masteredCount / mathTopics.length) * 100);
+    $("rewardProgress").innerHTML = `<div class="reward-track"><span style="width:${percent}%"></span></div><strong>Kobe 6 冲刺：${masteredCount}/${mathTopics.length} 个知识点</strong><span>只有全部知识点已掌握，才能拿到最后一双 Kobe 6。</span>`;
   }
   $("rewardWall").innerHTML = shoeRewards.map(function(reward) {
-    const unlocked = game.points >= reward.points;
-    const gap = Math.max(0, reward.points - game.points);
+    const unlocked = reward.name.includes("Kobe") ? complete : game.points >= reward.points;
+    const gap = reward.name.includes("Kobe") ? Math.max(0, mathTopics.length - masteredCount) : Math.max(0, reward.points - game.points);
     return `<div class="shoe-card ${unlocked ? "unlocked" : "locked"}">
       <div class="shoe-art" style="--shoe:${reward.color};--accent:${reward.accent}"><img src="${reward.image}" alt="${escapeHtml(reward.name)}" /><span></span></div>
-      <div><strong>${escapeHtml(reward.name)}</strong><small>${escapeHtml(reward.subtitle)}</small><em>${unlocked ? "已解锁" : "还差" + gap + "分"}</em></div>
+      <div><strong>${escapeHtml(reward.name)}</strong><small>${escapeHtml(reward.subtitle)}</small><em>${unlocked ? "已解锁" : reward.name.includes("Kobe") ? "还差" + gap + "个知识点" : "还差" + gap + "分"}</em></div>
     </div>`;
   }).join("");
 }
@@ -934,6 +953,7 @@ function resetTopic() {
   state.variants = [];
   state.variantAnswers = {};
   state.variantRound = 0;
+  state.variantPasses = 0;
   state.session = { active: false, topic: state.currentTopic, startedAt: "" };
   state.unitIssues = {};
   renderLesson();
@@ -1019,12 +1039,13 @@ function init() {
   updateBrand();
 
   if (!allTopicNames().includes(state.currentTopic)) {
-    state.currentTopic = currentSubject === "english" ? "My Day" : "相遇问题";
+    state.currentTopic = currentSubject === "english" ? "Module 1 Unit 1 — She was a driver before." : "相遇问题";
   }
   $("startBtn").addEventListener("click", function() {
     state.session = { active: true, topic: state.currentTopic, startedAt: new Date().toISOString() };
-    save();
+    state.unitIssues = {};
     renderLesson();
+    save();
   });
   $("resetBtn").addEventListener("click", resetTopic);
   $("clearHistoryBtn").addEventListener("click", clearHistory);
@@ -1072,46 +1093,6 @@ async function askAiHint() {
     button.disabled = false;
     button.textContent = "问 AI 提示";
   }
-}
-
-function askAiHint() {
-  var questionEl = $("aiQuestion");
-  var answerEl = $("aiAnswer");
-  var stateEl = $("aiState");
-  if (!questionEl || !answerEl) return;
-  var question = questionEl.value.trim();
-  if (!question) { answerEl.textContent = "请先输入你的问题。"; answerEl.className = "ai-answer"; return; }
-
-  var context = currentSubject === "english"
-    ? "五年级下册英语 - 当前学习：" + state.currentTopic
-    : "五年级下册数学 - 当前学习：" + state.currentTopic;
-
-  if (stateEl) stateEl.textContent = "思考中...";
-  answerEl.textContent = "正在请教 AI 学习伙伴...";
-  answerEl.className = "ai-answer";
-
-  fetch("/api/deepseek", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question: question, context: context, subject: currentSubject })
-  })
-  .then(function(resp) { return resp.json(); })
-  .then(function(data) {
-    if (data.answer) {
-      answerEl.textContent = data.answer;
-      answerEl.className = "ai-answer";
-      if (stateEl) stateEl.textContent = "已回答";
-    } else {
-      answerEl.textContent = "AI 暂时无法回答，请稍后再试。";
-      answerEl.className = "ai-answer";
-      if (stateEl) stateEl.textContent = "出错";
-    }
-  })
-  .catch(function() {
-    answerEl.textContent = "网络连接失败，请检查网络后重试。";
-    answerEl.className = "ai-answer";
-    if (stateEl) stateEl.textContent = "离线";
-  });
 }
 
 function reviewPhotoAnswers() {

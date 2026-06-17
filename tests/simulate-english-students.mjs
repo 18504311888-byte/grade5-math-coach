@@ -11,6 +11,8 @@
  */
 
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
 
 // ════════════════════════════════════════════════════════════
 // 1. Mock localStorage
@@ -268,7 +270,13 @@ const ENGLISH_PROBLEMS = {
   ]
 };
 
-const ALL_ENGLISH_TOPICS = Object.keys(ENGLISH_PROBLEMS);
+const publishedEnglishCode = fs.readFileSync('english-bank.js', 'utf8');
+const publishedEnglishSandbox = { window: {} };
+vm.createContext(publishedEnglishSandbox);
+vm.runInContext(publishedEnglishCode, publishedEnglishSandbox);
+const PUBLISHED_TOPICS = (publishedEnglishSandbox.window.englishTopics || []).flatMap(function(module) { return module.items || []; });
+const PUBLISHED_GET_PROBLEMS = publishedEnglishSandbox.window.getEnglishProblems;
+const ALL_ENGLISH_TOPICS = PUBLISHED_TOPICS.length ? PUBLISHED_TOPICS : Object.keys(ENGLISH_PROBLEMS);
 
 // ════════════════════════════════════════════════════════════
 // 3. Grading functions
@@ -411,7 +419,7 @@ function simulateStudent(studentId, levelDef, topicName, rng) {
   storage.setItem('grade5EnglishCoach.v1', JSON.stringify(state));
   storage.setItem('grade5EnglishGame.v1', JSON.stringify(game));
 
-  var problems = ENGLISH_PROBLEMS[topicName] || ENGLISH_PROBLEMS['My Day'];
+  var problems = PUBLISHED_GET_PROBLEMS ? PUBLISHED_GET_PROBLEMS(topicName) : (ENGLISH_PROBLEMS[topicName] || ENGLISH_PROBLEMS['My Day']);
 
   // --- Phase 1: Basic answering ---
   var studentBaseAnswers = problems.map(function(problem) {
