@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f5f2ea" />
     <title>五下学习教练</title>
     <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="stylesheet" href="styles.css?v=32" />
+    <link rel="stylesheet" href="styles.css?v=33" />
   </head>
   <body>
     <div class="v2-shell">
@@ -69,6 +69,11 @@
               <div id="diagnosisBody" class="empty-state">完成题目后提交，教练会告诉你下一步。</div>
             </section>
 
+            <section class="coach-card source-panel">
+              <div class="card-title"><h3>教材来源</h3><span>已核验</span></div>
+              <div id="sourceBody" class="source-body">北师大版五年级下册数学 · 当前知识点来自教材目录与自学计划核对。</div>
+            </section>
+
             <section class="coach-card ai-panel">
               <div class="card-title"><h3>AI 学习伙伴</h3><span id="aiState">只提示不直接给答案</span></div>
               <textarea id="aiQuestion" class="text-field ai-question" placeholder="例如：我不知道第一步怎么做。"></textarea>
@@ -93,6 +98,10 @@
               <div class="card-title"><h3>🏀 Kobe 6 目标</h3><span id="shoePoints">0分</span></div>
               <div id="rewardProgress" class="reward-progress"></div>
               <div id="rewardWall" class="reward-wall"></div>
+            </section>
+            <section class="coach-card reward-card-panel">
+              <div class="card-title"><h3>我的奖励卡</h3><span>孩子设计</span></div>
+              <div class="reward-card-preview"><span>🏀</span><strong>Kobe 6</strong><small>完成全部数学知识点后获得</small></div>
             </section>
             <section class="coach-card reward-panel" id="rewardPanelEnglish" style="display:none">
               <div class="card-title"><h3>🏸 英语奖励</h3><span id="badmintonPoints">0分</span></div>
@@ -124,8 +133,8 @@
       <img id="photoReviewImage" alt="作答照片" />
     </dialog>
 
-    <script src="problem-bank.js?v=32" defer></script>
-    <script src="english-bank.js?v=32" defer></script>
-    <script src="app.js?v=32" defer></script>
+    <script src="problem-bank.js?v=33" defer></script>
+    <script src="english-bank.js?v=33" defer></script>
+    <script src="app.js?v=33" defer></script>
   </body>
 </html>

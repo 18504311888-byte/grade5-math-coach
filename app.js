@@ -388,10 +388,16 @@ function renderLesson() {
   $("topicTitle").textContent = state.currentTopic;
   $("lessonGoal").textContent = meta.goal;
   $("coreRule").textContent = meta.rule;
-  var diagramEl = document.querySelector(".mini-diagram b");
+  var diagramEl = $("heroDiagram");
   if (diagramEl) diagramEl.textContent = meta.diagram;
   var topicStatus = state.topicStatus[state.currentTopic];
   $("topicStatus").textContent = topicStatus?.mastered ? "已掌握" : topicStatus?.attempts ? "需巩固" : "未开始";
+  var sourceBody = $("sourceBody");
+  if (sourceBody) {
+    sourceBody.textContent = currentSubject === "english"
+      ? "外研社五年级下册英语 · Unit 标题与课文句型已核验；当前题目为课文句型改编练习。"
+      : "北师大版五年级下册数学 · 当前知识点来自教材单元目录与自学计划核对。";
+  }
   // Update reward panels visibility
   updateRewardPanels();
   renderProblems();
@@ -992,30 +998,24 @@ function updateSubjectTabs() {
   var mathTab = $("mathTab");
   var englishTab = $("englishTab");
   if (mathTab) {
-    mathTab.className = "subject-tab" + (currentSubject === "math" ? " active" : "");
+    mathTab.className = "subject-chip" + (currentSubject === "math" ? " active" : "");
   }
   if (englishTab) {
-    englishTab.className = "subject-tab" + (currentSubject === "english" ? " active" : "");
+    englishTab.className = "subject-chip" + (currentSubject === "english" ? " active" : "");
   }
 }
 
 function updateBrand() {
-  var brandMark = document.querySelector(".brand-mark");
   var subjectTitle = $("subjectTitle");
-  var brandP = document.querySelector(".brand p");
   if (currentSubject === "english") {
-    if (brandMark) { brandMark.textContent = "英"; brandMark.className = "brand-mark english-mark"; }
     if (subjectTitle) subjectTitle.textContent = "五下英语";
-    if (brandP) brandP.textContent = "外研社版";
     document.body.classList.add("english-theme");
     var encText = document.querySelector(".game-encourage-text");
     if (encText) encText.textContent = "Practice makes perfect!";
     var startBtn = $("startBtn");
     if (startBtn) startBtn.innerHTML = '<span aria-hidden="true">▶</span> 开始';
   } else {
-    if (brandMark) { brandMark.textContent = "数"; brandMark.className = "brand-mark math-mark"; }
     if (subjectTitle) subjectTitle.textContent = "五下数学";
-    if (brandP) brandP.textContent = "北师大版";
     document.body.classList.remove("english-theme");
     var encText2 = document.querySelector(".game-encourage-text");
     if (encText2) encText2.textContent = "思考让大脑更聪明！";
