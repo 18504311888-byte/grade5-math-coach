@@ -1591,3 +1591,21 @@ body.english-theme .status-pill{background:#e6f5ef !important;color:#1a6b4b !imp
 body.english-theme .daily-tasks span{background:#e8f6ef !important;color:#1a6b4b !important}
 .source-body{padding:11px 12px;background:#f8fafc;border-radius:10px;color:var(--v2-muted);font-size:12px;line-height:1.7}.source-panel .card-title span{color:var(--v2-green)}
 .reward-card-preview{display:grid;justify-items:center;gap:5px;padding:18px;border-radius:15px;background:linear-gradient(135deg,#fff7df,#fff);border:1px solid #f3dfad;text-align:center}.reward-card-preview span{font-size:34px}.reward-card-preview strong{font-size:18px}.reward-card-preview small{color:var(--v2-muted);font-size:11px}
+
+/* Sidebar navigation readability fix */
+.v2-sidebar .v2-topic-nav{gap:10px}
+.v2-sidebar .unit-group{padding:7px 0;border-top:1px solid #eee5d7}
+.v2-sidebar .unit-header{background:#fffaf0 !important;color:#26364c !important;border:1px solid transparent;border-radius:10px;padding:9px 8px;font-size:14px;font-weight:900}
+.v2-sidebar .unit-header:hover{background:#f6efe2 !important;color:#1b4b91 !important}
+.v2-sidebar .unit-header[aria-expanded="true"]{background:#f4ead7 !important;color:#1b4b91 !important}
+.v2-sidebar .unit-chevron{color:#8a6e43 !important}
+.v2-sidebar .unit-header[aria-expanded="true"] .unit-chevron{color:#1b4b91 !important}
+.v2-sidebar .unit-items{padding:5px 0 4px 8px;gap:5px}
+.v2-sidebar .topic-button{background:#fff !important;color:#26364c !important;border:1px solid #eee5d7 !important;border-radius:10px;min-height:42px;padding:8px 9px;font-weight:750;line-height:1.35}
+.v2-sidebar .topic-button:hover{background:#eef5ff !important;border-color:#b7cce9 !important;color:#123b6d !important}
+.v2-sidebar .topic-button.active{background:#dfeeff !important;border-color:#7aa2d5 !important;color:#123b6d !important;box-shadow:inset 3px 0 0 #1b4b91}
+.v2-sidebar .topic-button small{color:#68788f !important;font-weight:800;font-size:10px}
+.v2-sidebar .topic-button.active small{color:#1b4b91 !important}
+body.english-theme .v2-sidebar .unit-header[aria-expanded="true"]{background:#e7f4ed !important;color:#1a6b4b !important}
+body.english-theme .v2-sidebar .topic-button.active{background:#e1f3e9 !important;border-color:#8bc6a6 !important;color:#1a6b4b !important;box-shadow:inset 3px 0 0 #1a6b4b}
+body.english-theme .v2-sidebar .topic-button:hover{background:#f0faf5 !important;border-color:#b7d7c8 !important;color:#1a6b4b !important}
