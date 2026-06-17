@@ -3,175 +3,107 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#f7f9fc" />
-    <title>五下学习器 — 数学·英语</title>
+    <meta name="theme-color" content="#f5f2ea" />
+    <title>五下学习教练</title>
     <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="stylesheet" href="styles.css?v=31" />
+    <link rel="stylesheet" href="styles.css?v=32" />
   </head>
   <body>
-    <div class="app-shell">
-      <aside class="rail" aria-label="知识点">
-        <div class="brand" id="brandArea">
-          <div class="brand-mark math-mark">数</div>
-          <div>
-            <h1 id="subjectTitle">五下数学</h1>
-            <p>北师大版</p>
-          </div>
+    <div class="v2-shell">
+      <aside class="v2-sidebar">
+        <div class="v2-brand">
+          <div class="v2-logo">学</div>
+          <div><strong>五下学习教练</strong><small>数学 · 英语 · 真掌握</small></div>
         </div>
-
-        <div class="meter" aria-label="学习进度">
-          <div>
-            <span id="masteredCount">0</span>
-            <small>已掌握</small>
-          </div>
-          <div>
-            <span id="reviewCount">0</span>
-            <small>需巩固</small>
-          </div>
-          <div>
-            <span id="photoCount">0</span>
-            <small>照片</small>
-          </div>
+        <div class="subject-switcher" role="group" aria-label="学科切换">
+          <button class="subject-chip active" id="mathTab" type="button">📐 数学</button>
+          <button class="subject-chip" id="englishTab" type="button">📖 英语</button>
         </div>
-
-        <nav id="topicNav" class="topic-nav"></nav>
+        <div class="progress-card">
+          <div><span id="masteredCount">0</span><small>已掌握</small></div>
+          <div><span id="reviewCount">0</span><small>需巩固</small></div>
+          <div><span id="photoCount">0</span><small>照片</small></div>
+        </div>
+        <div class="nav-heading"><span>教材目录</span><small id="subjectTitle">五下数学</small></div>
+        <nav id="topicNav" class="v2-topic-nav"></nav>
+        <div class="sidebar-footer"><a href="admin.html">家长后台</a><span>记录只保存在本机</span></div>
       </aside>
 
-      <main class="main">
-        <header class="topbar">
+      <main class="v2-main">
+        <header class="v2-topbar">
           <div>
-            <p class="eyebrow" id="unitLabel">用方程解决问题</p>
-            <h2 id="topicTitle">相遇问题</h2>
+            <p id="unitLabel">用方程解决问题</p>
+            <h1 id="topicTitle">相遇问题</h1>
           </div>
-          <div class="toolbar" role="group" aria-label="主要操作">
-            <div class="subject-bar" id="subjectBar">
-              <button type="button" class="subject-tab active" data-subject="math" id="mathTab">
-                <span class="subject-icon">📐</span>
-                <span>数学</span>
-              </button>
-              <button type="button" class="subject-tab" data-subject="english" id="englishTab">
-                <span class="subject-icon">📖</span>
-                <span>英语</span>
-              </button>
-            </div>
-            <button class="tool-button" id="startBtn" type="button">
-              <span aria-hidden="true">▶</span>
-              开始
-            </button>
-            <button class="tool-button secondary" id="resetBtn" type="button">
-              <span aria-hidden="true">↺</span>
-              重做
-            </button>
-            <a class="tool-button secondary" href="admin.html">管理后台</a>
+          <div class="top-actions">
+            <button class="primary-button" id="startBtn" type="button">▶ 开始今天学习</button>
+            <button class="secondary-button" id="resetBtn" type="button">↺ 重新开始</button>
           </div>
         </header>
 
-        <div class="game-bar" id="gameBar">
-          <div class="game-streak">
-            <span class="streak-emoji" aria-label="连续学习徽章">🌱</span>
-            <span>连续</span>
-            <span class="streak-count">0</span>
-            <span>天</span>
+        <section class="coach-hero">
+          <div class="hero-copy">
+            <div class="status-row"><span class="status-pill" id="topicStatus">未开始</span><span id="lessonGoal">找等量关系，列方程解决相遇问题</span></div>
+            <h2>今天不是刷题，而是弄懂方法。</h2>
+            <p>先说清楚你在想什么，再做题。基础题、变式题、解释能力都通过，才算真正掌握。</p>
           </div>
-          <div class="game-stars">
-            <span aria-hidden="true">⭐</span>
-            <span class="star-count">0</span>
-          </div>
-          <span class="game-encourage-text">思考让大脑更聪明！</span>
+          <div class="hero-rule"><span>核心关系</span><strong id="coreRule">甲走的路程 + 乙走的路程 = 总路程</strong><em id="heroDiagram">相向 / 追及 / 折返</em></div>
+        </section>
+
+        <section class="mission-strip" id="gameBar">
+          <div class="mission-stat"><span>🌱</span><strong class="streak-count">0</strong><small>连续天数</small></div>
+          <div class="mission-stat"><span>⭐</span><strong class="star-count">0</strong><small>学习星星</small></div>
+          <div class="mission-text"><strong class="game-encourage-text">思考让大脑更聪明！</strong><small>今天先完成一轮认真练习。</small></div>
           <div class="daily-tasks" id="dailyTasks"></div>
-        </div>
+        </section>
 
-        <section class="workspace">
-          <section class="lesson-panel" aria-label="练习区">
-            <div class="focus-strip">
-              <div>
-                <span class="status-pill" id="topicStatus">未开始</span>
-                <strong id="lessonGoal">找等量关系，列方程解决相遇问题</strong>
-              </div>
-              <div class="mini-diagram" aria-label="相遇问题示意">
-                <span>A</span>
-                <i></i>
-                <b>相向而行</b>
-                <i></i>
-                <span>B</span>
-              </div>
-            </div>
-
-            <div class="rule-line">
-              <span>核心关系</span>
-              <strong id="coreRule">甲走的路程 + 乙走的路程 = 总路程</strong>
-            </div>
-
+        <section class="learning-grid">
+          <section class="lesson-column">
+            <div class="section-title"><div><span>01</span><h2>今日练习</h2></div><small>点击开始后才能作答</small></div>
             <div id="problemList" class="problem-list"></div>
           </section>
 
-          <aside class="coach-panel" aria-label="诊断区">
-            <div class="upload-panel">
-              <div class="panel-title">
-                <h3>作答照片</h3>
-                <span id="uploadState">未上传</span>
-              </div>
-              <label class="upload-drop" for="photoInput">
-                <span aria-hidden="true">拍</span>
-                <strong>拍照或选择图片</strong>
-              </label>
-              <input id="photoInput" class="file-input" type="file" accept="image/*" capture="environment" multiple />
-              <div class="photo-review-actions">
-                <button id="reviewPhotoBtn" class="tool-button secondary" type="button">查看照片答题</button>
-              </div>
-              <div id="photoGrid" class="photo-grid"></div>
-            </div>
+          <aside class="coach-column">
+            <section class="coach-card diagnosis-panel">
+              <div class="card-title"><h3>诊断反馈</h3><span id="scoreBadge">待提交</span></div>
+              <div id="diagnosisBody" class="empty-state">完成题目后提交，教练会告诉你下一步。</div>
+            </section>
 
-            <div class="diagnosis-panel">
-              <div class="panel-title">
-                <h3>诊断</h3>
-                <span id="scoreBadge">待提交</span>
-              </div>
-              <div id="diagnosisBody" class="empty-state">完成题目后提交。</div>
-            </div>
+            <section class="coach-card ai-panel">
+              <div class="card-title"><h3>AI 学习伙伴</h3><span id="aiState">只提示不直接给答案</span></div>
+              <textarea id="aiQuestion" class="text-field ai-question" placeholder="例如：我不知道第一步怎么做。"></textarea>
+              <button id="askAiBtn" class="secondary-button full" type="button">问 AI 提示</button>
+              <div id="aiAnswer" class="ai-answer empty-state">AI 会先追问你，而不是把答案直接说出来。</div>
+            </section>
 
-            <div class="ai-panel">
-              <div class="panel-title">
-                <h3>AI 学习伙伴</h3>
-                <span id="aiState">随时可问</span>
-              </div>
-              <textarea id="aiQuestion" class="text-field ai-question" placeholder="例如：为什么这里要用 at？或者：这道相遇题第一步怎么算？"></textarea>
-              <button id="askAiBtn" class="tool-button secondary" type="button">问 AI 提示</button>
-              <div id="aiAnswer" class="ai-answer empty-state">AI 会先给提示，不直接把答案全部说出来。</div>
-            </div>
-
-            <div class="variant-panel">
-              <div class="panel-title">
-                <h3>追练题</h3>
-                <span id="variantBadge">0</span>
-              </div>
+            <section class="coach-card variant-panel">
+              <div class="card-title"><h3>追练题</h3><span id="variantBadge">0</span></div>
               <div id="variantList" class="variant-list"></div>
-            </div>
+            </section>
 
-            <div class="history-panel">
-              <div class="panel-title">
-                <h3>学习记录</h3>
-                <button id="clearHistoryBtn" class="text-button" type="button">清空</button>
-              </div>
-              <div id="historyList" class="history-list"></div>
-            </div>
+            <section class="coach-card upload-panel">
+              <div class="card-title"><h3>作答照片</h3><span id="uploadState">未上传</span></div>
+              <label class="upload-drop" for="photoInput"><span>📷</span><strong>拍照或选择图片</strong><small>保存草稿，不自动识别手写</small></label>
+              <input id="photoInput" class="file-input" type="file" accept="image/*" capture="environment" multiple />
+              <button id="reviewPhotoBtn" class="secondary-button full" type="button">查看最新照片</button>
+              <div id="photoGrid" class="photo-grid"></div>
+            </section>
 
-            <div class="reward-panel" id="rewardPanelMath">
-              <div class="panel-title">
-                <h3>🏀 球鞋奖励墙</h3>
-                <span id="shoePoints">0分</span>
-              </div>
+            <section class="coach-card reward-panel" id="rewardPanelMath">
+              <div class="card-title"><h3>🏀 Kobe 6 目标</h3><span id="shoePoints">0分</span></div>
               <div id="rewardProgress" class="reward-progress"></div>
               <div id="rewardWall" class="reward-wall"></div>
-            </div>
-            <div class="reward-panel" id="rewardPanelEnglish" style="display:none">
-              <div class="panel-title">
-                <h3>🏸 羽毛球拍奖励墙</h3>
-                <span id="badmintonPoints">0分</span>
-              </div>
+            </section>
+            <section class="coach-card reward-panel" id="rewardPanelEnglish" style="display:none">
+              <div class="card-title"><h3>🏸 英语奖励</h3><span id="badmintonPoints">0分</span></div>
               <div id="badmintonProgress" class="reward-progress"></div>
               <div id="badmintonWall" class="reward-wall"></div>
-            </div>
+            </section>
+
+            <section class="coach-card history-panel">
+              <div class="card-title"><h3>最近记录</h3><button id="clearHistoryBtn" class="text-button" type="button">清空</button></div>
+              <div id="historyList" class="history-list"></div>
+            </section>
           </aside>
         </section>
       </main>
@@ -179,10 +111,7 @@
 
     <template id="problemTemplate">
       <article class="problem-card">
-        <div class="problem-head">
-          <span class="problem-index"></span>
-          <span class="problem-type"></span>
-        </div>
+        <div class="problem-head"><span class="problem-index"></span><span class="problem-type"></span></div>
         <p class="problem-text"></p>
         <div class="answer-area"></div>
         <div class="problem-feedback"></div>
@@ -190,16 +119,13 @@
     </template>
 
     <dialog id="photoReviewDialog" class="photo-review-dialog">
-      <div class="photo-review-header">
-        <h3>作答照片预览</h3>
-        <button id="closePhotoReviewBtn" class="text-button" type="button">关闭</button>
-      </div>
-      <p>请查看照片中的最终答案和计算过程，再把答案填写到题目输入框中提交。当前版本会辅助查看图片，不会自动读取手写文字。</p>
+      <div class="photo-review-header"><h3>作答照片预览</h3><button id="closePhotoReviewBtn" class="text-button" type="button">关闭</button></div>
+      <p>请查看照片中的最终答案和计算过程，再把答案填写到输入框中提交。</p>
       <img id="photoReviewImage" alt="作答照片" />
     </dialog>
 
-    <script src="problem-bank.js?v=31" defer></script>
-    <script src="english-bank.js?v=31" defer></script>
-    <script src="app.js?v=31" defer></script>
+    <script src="problem-bank.js?v=32" defer></script>
+    <script src="english-bank.js?v=32" defer></script>
+    <script src="app.js?v=32" defer></script>
   </body>
 </html>
