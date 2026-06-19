@@ -144,6 +144,55 @@ function getUnit(topicName) {
   return topics.find(function(unit) { return unit.items.includes(topicName); })?.unit || "";
 }
 
+function getUnitItems(unitName) {
+  const list = currentSubject === "english" ? (window.englishTopics || []) : topics;
+  return list.find(function(unit) { return unit.unit === unitName; })?.items || [];
+}
+
+function unitIsMastered(unitName) {
+  const items = getUnitItems(unitName);
+  return items.length > 0 && items.every(function(item) { return state.topicStatus[item]?.mastered; });
+}
+
+function unitSummaryText(unitName) {
+  if (currentSubject === "english") {
+    return `本单元重点：${unitName} 的课文句型、关键词和情境表达。复习时先读句子，再找关键词，最后自己说一句。`;
+  }
+  const map = {
+    "分数加减法": "通分、约分、运算顺序、分数和小数互化、大小比较。",
+    "长方体（一）": "面、棱、顶点、展开图、表面积、露在外面的面。",
+    "分数乘法": "分数乘整数、求一个数的几分之几、分数乘分数、倒数。",
+    "长方体（二）": "体积、容积、单位换算、底面积乘高、排水法。",
+    "分数除法": "除以一个数等于乘它的倒数、单位1、分数应用题。",
+    "确定位置": "观测点、方向、角度、距离、路线描述。",
+    "用方程解决问题": "设未知数、找等量关系、列方程、检验答案。",
+    "数学好玩": "拆分问题、画图、列表、优化方案。",
+    "数据的表示和分析": "读图、画图、比较变化、平均数。",
+  };
+  return `本单元重点：${map[unitName] || "概念、方法、易错点和应用。"}`;
+}
+
+function buildUnitConsolidation(unitName) {
+  if (currentSubject === "english") {
+    const items = getUnitItems(unitName);
+    return [
+      { text: `从 ${unitName} 中挑一个句型，自己写一句话。`, answer: "" },
+      { text: `从 ${unitName} 中挑 3 个关键词，写一句完整句子。`, answer: "" },
+      { text: `读出本单元一个课文句子，并说出它在表达什么。`, answer: "" },
+    ];
+  }
+  const unit = unitName;
+  if (unit === "分数加减法") return [{ text: "计算：1/3 + 1/4 = ?", answer: "7/12" }, { text: "计算：2/5 + 0.3 = ?", answer: "0.7" }, { text: "比较：3/4 和 0.7，谁大？", answer: "3/4" }];
+  if (unit === "长方体（一）") return [{ text: "一个长方体有几个面？", answer: "6" }, { text: "长方体长5厘米、宽4厘米、高3厘米，表面积是多少平方厘米？", answer: "94" }, { text: "两个正方体叠在一起，露在外面的面有几个？", answer: "10" }];
+  if (unit === "分数乘法") return [{ text: "计算：3/5 × 10 = ?", answer: "6" }, { text: "12 的 1/4 是多少？", answer: "3" }, { text: "3/7 的倒数是多少？", answer: "7/3" }];
+  if (unit === "长方体（二）") return [{ text: "长方体长5、宽4、高3，体积是多少立方厘米？", answer: "60" }, { text: "1 立方分米 = ? 立方厘米", answer: "1000" }, { text: "水从 200mL 上升到 350mL，物体体积是多少？", answer: "150" }];
+  if (unit === "分数除法") return [{ text: "计算：3/4 ÷ 3 = ?", answer: "1/4" }, { text: "计算：2 ÷ 1/4 = ?", answer: "8" }, { text: "一个数的 3/5 是 12，这个数是多少？", answer: "20" }];
+  if (unit === "确定位置") return [{ text: "描述位置时先确定什么？", answer: "观测点" }, { text: "东偏北30度要先说哪个方向？", answer: "东" }, { text: "路线描述通常要包含哪两类信息？", answer: "方向和距离" }];
+  if (unit === "用方程解决问题") return [{ text: "列方程前先找什么？", answer: "等量关系" }, { text: "哥哥比妹妹多8岁，两人年龄和28岁，妹妹几岁？", answer: "10" }, { text: "相遇问题中，两人路程和等于什么？", answer: "总路程" }];
+  if (unit === "数学好玩") return [{ text: "综合题常用哪三种方法帮助分析？", answer: "画图列表列式" }, { text: "包装问题通常和什么数学知识有关？", answer: "表面积" }, { text: "长跑问题通常需要关注什么？", answer: "路程时间" }];
+  return [{ text: "复式统计图可以比较什么？", answer: "两组数据" }, { text: "平均数等于什么？", answer: "总数除以份数" }, { text: "折线图适合看什么？", answer: "变化趋势" }];
+}
+
 function numberAnswer(value, unit = "", tolerance = 0.01) {
   return { type: "number", value, unit, tolerance };
 }
@@ -402,9 +451,50 @@ function renderLesson() {
   updateRewardPanels();
   renderProblems();
   renderVariants();
+  renderUnitSummary();
   renderDiagnosis();
   renderCounts();
   renderGame();
+}
+
+function renderUnitSummary() {
+  const unitName = getUnit(state.currentTopic);
+  const badge = $("unitSummaryBadge");
+  const body = $("unitSummaryBody");
+  if (!badge || !body) return;
+  if (!unitIsMastered(unitName)) {
+    badge.textContent = "未解锁";
+    body.className = "empty-state";
+    body.textContent = "完成本单元所有知识点后，这里会生成知识点汇总和巩固题。";
+    return;
+  }
+  const items = getUnitItems(unitName);
+  const questions = buildUnitConsolidation(unitName);
+  badge.textContent = "已解锁";
+  body.className = "unit-summary-content";
+  body.innerHTML = `<p><strong>${unitName} 通关！</strong></p><p>${escapeHtml(unitSummaryText(unitName))}</p><div class="unit-summary-list">${items.map(function(item) { return `<span>✓ ${escapeHtml(item)}</span>`; }).join("")}</div><div class="unit-consolidation"><strong>巩固 3 题</strong>${questions.map(function(question, index) { return `<label><span>${index + 1}. ${escapeHtml(question.text)}</span><input class="unit-consolidation-input" data-unit-question="${index}" placeholder="写答案或说一说" /></label>`; }).join("")}<button id="submitUnitConsolidationBtn" class="secondary-button full" type="button">提交巩固题</button><div id="unitConsolidationFeedback" class="empty-state"></div></div>`;
+  const button = $("submitUnitConsolidationBtn");
+  if (button) button.addEventListener("click", function() { submitUnitConsolidation(unitName, questions); });
+}
+
+function submitUnitConsolidation(unitName, questions) {
+  const inputs = Array.from(document.querySelectorAll(".unit-consolidation-input"));
+  const correct = questions.reduce(function(sum, question, index) {
+    const raw = String(inputs[index]?.value || "").trim().toLowerCase();
+    if (currentSubject === "english") return sum + (raw.length >= 8 ? 1 : 0);
+    const answer = String(question.answer).toLowerCase();
+    return sum + (raw.includes(answer) ? 1 : 0);
+  }, 0);
+  const feedback = $("unitConsolidationFeedback");
+  if (!feedback) return;
+  feedback.className = correct === questions.length ? "unit-consolidation-feedback ok" : "unit-consolidation-feedback bad";
+  feedback.textContent = correct === questions.length ? `太棒了！${unitName} 的巩固题全部通过，可以进入下一个单元。` : `本轮答对 ${correct}/${questions.length} 题。先看错题，再重新巩固一次。`;
+  if (correct === questions.length) {
+    state.records.unshift({ topic: `${unitName} 单元巩固`, score: 100, correct, total: questions.length, time: new Date().toLocaleString("zh-CN") });
+    state.records = state.records.slice(0, 20);
+    save();
+    renderHistory();
+  }
 }
 
 function updateRewardPanels() {
@@ -753,7 +843,7 @@ function submitVariants() {
       $("topicStatus").textContent = "已掌握";
       $("diagnosisBody").innerHTML = `<p><strong>已掌握，可以进入下一个知识点！</strong></p><p>你已经连续两轮追练全对，说明不只是会做原题，也能处理变化题。</p>`;
       state.variants = [];
-      setTimeout(function() { renderVariants(); renderNav(); renderCounts(); renderGame(); save(); }, 900);
+      setTimeout(function() { renderVariants(); renderUnitSummary(); renderNav(); renderCounts(); renderGame(); save(); }, 900);
     } else {
       state.variants = state.variants.map(function(item, index) { return makeFollowUpVariant(item, index); });
       setTimeout(function() { renderVariants(); }, 900);
